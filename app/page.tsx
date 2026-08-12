@@ -68,7 +68,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
           setCovered(old => Array.from(new Set([...old, ...cells])));
         }
       } else {
-        if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + 1.05));
+        if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + (step === 6 ? 1.45 : 1.05)));
         if (step !== 6) setMarks(m => [...m.slice(-78), p]);
       }
     }
