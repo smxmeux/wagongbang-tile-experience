@@ -7,7 +7,7 @@ type Step = { title: string; verb: string; desc: string; hint: string; tool: str
 
 const steps: Step[] = [
   { title: "흙 고르기", verb: "좋은 흙을 바구니에 담아요", desc: "여러 흙이 섞여 있어요. 입자가 곱고 점성이 좋은 붉은 점토 3개를 찾아 바구니로 옮겨보세요.", hint: "붉고 매끈한 흙만 골라 바구니 안에 놓으세요.", tool: "흙", mode: "drop" },
-  { title: "흙판 만들기", verb: "밀대로 점토를 밀어요", desc: "뭉친 점토를 앞뒤로 고르게 밀어 넓고 일정한 두께의 흙판을 만듭니다.", hint: "밀대를 잡고 점토 위를 여러 번 왕복하세요.", tool: "밀대", mode: "rub" },
+  { title: "흙판 만들기", verb: "점토를 쌓고 쨀줄로 잘라요", desc: "바구니의 점토를 직사각형 틀 안에 층층이 쌓은 뒤, 쨀줄을 가로로 당겨 일정한 두께의 흙판을 만듭니다.", hint: "먼저 점토 5덩이를 틀에 쌓고, 쨀줄로 3장의 흙판을 잘라내세요.", tool: "쨀줄", mode: "rub" },
   { title: "통보 씌우기", verb: "천을 와통에 감아요", desc: "원통와통에 통보를 팽팽하게 씌워 점토가 나무에 달라붙지 않도록 합니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
   { title: "흙판 붙이기", verb: "흙판을 와통에 붙여요", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
   { title: "외면 다듬기", verb: "붓으로 표면을 펴요", desc: "물을 묻힌 붓으로 거친 외면과 접합부를 부드럽게 정리합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
@@ -36,10 +36,11 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   const [wrong, setWrong] = useState<number | null>(null);
   const [marks, setMarks] = useState<Point[]>([]);
   const [covered, setCovered] = useState<string[]>([]);
+  const [stacked, setStacked] = useState(0);
   const brushPercent = Math.round((covered.length / 49) * 100);
-  const finished = step === 0 ? caught.length === 3 : step === 4 ? brushPercent >= 86 : rub >= 100;
+  const finished = step === 0 ? caught.length === 3 : step === 1 ? stacked >= 5 && rub >= 100 : step === 4 ? brushPercent >= 86 : rub >= 100;
 
-  useEffect(() => { finishFired.current = false; setDrag(null); setPos({ x: 14, y: 70 }); setRub(0); setCaught([]); setWrong(null); setMarks([]); setCovered([]); }, [step]);
+  useEffect(() => { finishFired.current = false; setDrag(null); setPos({ x: 14, y: 70 }); setRub(0); setCaught([]); setWrong(null); setMarks([]); setCovered([]); setStacked(0); }, [step]);
   useEffect(() => {
     if (!finished || finishFired.current) return;
     finishFired.current = true;
@@ -55,7 +56,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   const move = (e: PointerEvent) => {
     if (drag === null) return;
     const p = point(e); setPos(p);
-    if (steps[step].mode === "rub" && p.x > 24 && p.x < 82 && p.y > 18 && p.y < 82) {
+    if (steps[step].mode === "rub" && p.x > 24 && p.x < 82 && p.y > 18 && p.y < 82 && !(step === 1 && stacked < 5)) {
       if (step === 4) {
         if (p.x >= 39 && p.x <= 67 && p.y >= 22 && p.y <= 78) {
           const col = Math.max(0, Math.min(6, Math.floor(((p.x - 39) / 28) * 7)));
@@ -68,7 +69,9 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
           setCovered(old => Array.from(new Set([...old, ...cells])));
         }
       } else {
-        if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + (step === 6 ? 1.45 : 1.05)));
+        if (step === 1) {
+          if (Math.abs(p.x - pos.x) > 1.2) setRub(v => Math.min(100, v + .82));
+        } else if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + (step === 6 ? 1.45 : 1.05)));
         if (step !== 6) setMarks(m => [...m.slice(-78), p]);
       }
     }
@@ -79,6 +82,9 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
       const inBasket = pos.x > 66 && pos.y > 48;
       if (inBasket && clayPieces[drag].good) setCaught(c => c.includes(drag) ? c : [...c, drag]);
       else if (inBasket) { setWrong(drag); window.setTimeout(() => setWrong(null), 650); }
+    } else if (step === 1 && drag >= 10 && drag < 15) {
+      if (pos.x > 38 && pos.x < 67 && pos.y > 22 && pos.y < 82) setStacked(v => Math.min(5, v + 1));
+      setPos({ x: 14, y: 70 });
     } else if (steps[step].mode === "drop") {
       if (pos.x > 39 && pos.x < 70 && pos.y > 22 && pos.y < 83) setRub(100);
       else setPos({ x: 14, y: 70 });
@@ -86,17 +92,17 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
     setDrag(null);
   };
 
-  const toolName = ["", "밀대", "통보", "흙판", "붓", "와도", "와통 손잡이", "손질칼", "부채"][step];
+  const toolName = ["", "쨀줄", "통보", "흙판", "붓", "와도", "와통 손잡이", "손질칼", "부채"][step];
 
   return <div className={`craft-game game-${step} ${finished ? "game-finished" : ""}`} ref={box} onPointerMove={move} onPointerUp={end} onPointerCancel={end}>
-    <div className="game-head"><span>{finished ? "✓ 체험 성공" : "마우스·손가락으로 직접 움직여보세요"}</span><b>{step === 0 ? `${caught.length}/3` : `${step === 4 ? brushPercent : Math.round(rub)}%`}</b></div>
+    <div className="game-head"><span>{finished ? "✓ 체험 성공" : "마우스·손가락으로 직접 움직여보세요"}</span><b>{step === 0 ? `${caught.length}/3` : step === 1 && stacked < 5 ? `${stacked}/5 쌓기` : `${step === 4 ? brushPercent : Math.round(rub)}%`}</b></div>
     {step === 0 ? <>
       <div className="clay-group-label">여러 흙이 섞여 있어요</div>
       {clayPieces.map((p, i) => !caught.includes(i) && <button key={i} aria-label={`${p.name}: ${p.detail}`} data-name={p.name} data-detail={p.detail} className={`clay-piece ${wrong === i ? "wrong" : ""}`} style={{ left: `${drag === i ? pos.x : p.x}%`, top: `${drag === i ? pos.y : p.y}%`, background: p.c }} onPointerDown={e => start(e, i)} />)}
       <div className={`basket ${drag !== null ? "ready" : ""}`}><i/><span>좋은 흙 바구니</span><small>{caught.length ? "●".repeat(caught.length) : "여기에 놓기"}</small></div>
     </> : <>
       <div className={`work-target scene-${step}`}>
-        {step === 1 ? <div className="rolling-board"><div className="slab" style={{ transform: `scaleY(${.34 + rub / 145})`, borderRadius: `${45-rub/3}%` }}/><i className="mold-guide">와통 높이</i></div>
+        {step === 1 ? <div className="clay-frame"><span>점토 적층 틀</span><div className="stacked-clay">{Array.from({length:stacked},(_,i)=><i key={i}/>)}</div>{stacked>=5&&<div className="cut-sheets">{Array.from({length:Math.min(3,Math.floor(rub/34))},(_,i)=><i key={i}/>)}</div>}</div>
         : step === 6 ? <div className="release-scene"><div className="tile-shell"/><div className="mold-pull" style={{ transform: `translateY(${-rub * 1.35}px)` }}><i/></div></div>
         : step === 7 ? <div className="inner-tile"><span>기와 안쪽 · 내면</span>{marks.map((_,i)=><i key={i} className="inner-groove" style={{left:`${20+(i%8)*8}%`,top:`${18+(Math.floor(i/8)%6)*12}%`,transform:`rotate(${-4+(i%3)*4}deg)`}}/>)}</div>
         : step === 8 ? <div className="kiln"><div className="fired-tile"/><div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div></div>
@@ -111,9 +117,9 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
         {step !== 7 && step !== 6 && marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 90 }}/>) }
         {step === 5 && <div className="split-tile" style={{ "--split": `${rub / 18}px` } as CSSProperties}><i className="split-left"/><i className="split-right"/><b className="cut-line" style={{ height: `${rub}%` }}/></div>} 
       </div>
-      <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>
+      {step === 1 && stacked < 5 ? <div className="stack-basket"><span>점토 바구니</span>{Array.from({length:5-stacked},(_,i)=>{const id=10+stacked+i;return <button key={id} className="stack-lump" style={{left:`${drag===id?pos.x:18+(i%2)*12}%`,top:`${drag===id?pos.y:42+Math.floor(i/2)*15}%`}} onPointerDown={e=>start(e,id)} aria-label="점토 덩어리 옮기기"/>})}</div> : <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>}
     </>}
-    <div className="game-instruction">{finished ? "완료! 다음 단계로 이동합니다." : steps[step].hint}</div>
+    <div className="game-instruction">{finished ? "완료! 다음 단계로 이동합니다." : step===1&&stacked<5 ? "점토 덩어리를 직사각형 틀 안에 차곡차곡 놓으세요." : step===1 ? "쨀줄을 좌우로 당겨 흙판 3장을 잘라내세요." : steps[step].hint}</div>
   </div>;
 }
 
