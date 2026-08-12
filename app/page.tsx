@@ -89,6 +89,8 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   const [covered, setCovered] = useState<string[]>([]);
   const [stacked, setStacked] = useState(0);
   const brushPercent = Math.round((covered.length / 49) * 100);
+  const cutCount = step === 1 ? Math.min(3, Math.floor(rub / 33)) : 0;
+  const visibleClayLayers = step === 1 ? (stacked < 5 ? stacked : Math.max(0, 6 - cutCount * 2)) : 0;
   const finished = step === 0 ? caught.length === 3 : step === 1 ? stacked >= 5 && rub >= 100 : step === 4 ? brushPercent >= 86 : rub >= 100;
 
   useEffect(() => { finishFired.current = false; setDrag(null); setPos({ x: 14, y: 70 }); setRub(0); setCaught([]); setWrong(null); setMarks([]); setCovered([]); setStacked(0); }, [step]);
@@ -153,7 +155,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
       <div className={`basket ${drag !== null ? "ready" : ""}`}><i/><span>좋은 흙 바구니</span><small>{caught.length ? "●".repeat(caught.length) : "여기에 놓기"}</small></div>
     </> : <>
       <div className={`work-target scene-${step}`}>
-        {step === 1 ? <div className="clay-frame"><span>점토 적층 틀</span><div className="stacked-clay">{Array.from({length:Math.max(1,stacked-Math.floor(rub/25))},(_,i)=><i key={i}/>)}</div>{stacked>=5&&<div className="cut-sheets">{Array.from({length:Math.min(3,Math.floor(rub/34))},(_,i)=><i key={i}/>)}</div>}</div>
+        {step === 1 ? <div className={`clay-frame ${visibleClayLayers===0?"frame-empty":""}`}><span>점토 적층 틀</span><div className="stacked-clay">{Array.from({length:visibleClayLayers},(_,i)=><i key={i}/>)}</div>{stacked>=5&&<div className="cut-sheets">{Array.from({length:cutCount},(_,i)=><i key={i}/>)}</div>} {stacked===0&&<small className="empty-label">비어 있음</small>}</div>
         : step === 6 ? <div className="release-scene"><div className="tile-shell"/><div className="mold-pull" style={{ transform: `translateY(${-rub * 1.35}px)` }}><i/></div></div>
         : step === 7 ? <div className="inner-tile"><span>기와 안쪽 · 내면</span>{marks.map((_,i)=><i key={i} className="inner-groove" style={{left:`${20+(i%8)*8}%`,top:`${18+(Math.floor(i/8)%6)*12}%`,transform:`rotate(${-4+(i%3)*4}deg)`}}/>)}</div>
         : step === 8 ? <div className="kiln"><div className="fired-tile"/><div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div></div>
