@@ -1,100 +1,115 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { PointerEvent, useEffect, useRef, useState } from "react";
 
-const steps = [
-  { title: "흙 고르기", short: "채토 · 흙고름", tag: "준비", desc: "여러 흙을 살펴보고 모래와 불순물이 적으며 잘 뭉쳐지는 점토를 고릅니다.", tip: "손으로 눌렀을 때 갈라지지 않고 매끈하게 이어지는 흙이 좋아요." },
-  { title: "흙판 만들기", short: "소지 제작", tag: "준비", desc: "고른 흙을 충분히 치대 공기를 빼고, 두께가 일정한 넓은 판으로 만듭니다.", tip: "두께가 고르지 않으면 건조와 소성 중에 뒤틀리거나 깨질 수 있어요." },
-  { title: "통보 씌우기", short: "섬유 붙이기", tag: "성형", desc: "원통와통의 바깥면에 무명이나 마포 같은 천, 즉 통보(筒褓)를 팽팽하게 씌웁니다.", tip: "통보는 점토가 와통에 붙는 것을 막고 내면에 고운 직물 흔적을 남겨요." },
-  { title: "흙판 붙이기", short: "와통 성형", tag: "성형", desc: "통보를 씌운 원통와통 둘레에 흙판을 감고 이음새를 눌러 단단히 붙입니다.", tip: "겹친 부분이 너무 두껍거나 얇아지지 않도록 주변 두께와 맞춰요." },
-  { title: "외면 다듬기", short: "붓질 · 반건조", tag: "정면", desc: "붓과 손, 물을 이용해 외면의 요철과 접합부를 정리한 뒤 형태가 유지될 만큼 반건조합니다.", tip: "너무 젖으면 무너지고, 너무 마르면 와통에서 떼기 어려워요." },
-  { title: "2분할 홈 내기", short: "와도질", tag: "분할", desc: "수키와 제작 방식에 맞춰 와도(瓦刀)로 원통 성형체의 양쪽에 일정 깊이의 홈을 냅니다.", tip: "한 번에 자르기보다 홈을 낸 뒤 그 선을 따라 나누면 안정적이에요." },
-  { title: "와통에서 분리", short: "이형", tag: "분할", desc: "통보의 도움으로 반건조된 성형체를 원통와통에서 조심스럽게 빼냅니다.", tip: "이때 내면에 통보의 경사·위사와 봉합 흔적이 남는지 관찰해 보세요." },
-  { title: "내면 깎기", short: "칼 손질", tag: "마무리", desc: "칼로 안쪽의 두꺼운 부분과 절단면을 얇게 깎아 곡률과 측면을 고르게 맞춥니다.", tip: "평행한 절삭선은 제작 도구와 손의 방향을 알려주는 중요한 흔적이에요." },
-  { title: "가마에서 굽기", short: "소성", tag: "완성", desc: "충분히 건조한 기와를 가마에 넣고 높은 온도로 구워 단단한 기와로 완성합니다.", tip: "남은 수분은 균열의 원인이 됩니다. 완전 건조 뒤 소성해야 해요." },
+type Point = { x: number; y: number };
+type Step = { title: string; verb: string; desc: string; hint: string; tool: string; mode: "drop" | "rub" };
+
+const steps: Step[] = [
+  { title: "흙 고르기", verb: "좋은 흙을 바구니에 담아요", desc: "여러 흙이 섞여 있어요. 입자가 곱고 점성이 좋은 붉은 점토 3개를 찾아 바구니로 옮겨보세요.", hint: "붉고 매끈한 흙만 골라 바구니 안에 놓으세요.", tool: "흙", mode: "drop" },
+  { title: "흙판 만들기", verb: "밀대로 점토를 밀어요", desc: "뭉친 점토를 앞뒤로 고르게 밀어 넓고 일정한 두께의 흙판을 만듭니다.", hint: "밀대를 잡고 점토 위를 여러 번 왕복하세요.", tool: "밀대", mode: "rub" },
+  { title: "통보 씌우기", verb: "천을 와통에 감아요", desc: "원통와통에 통보를 팽팽하게 씌워 점토가 나무에 달라붙지 않도록 합니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
+  { title: "흙판 붙이기", verb: "흙판을 와통에 붙여요", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
+  { title: "외면 다듬기", verb: "붓으로 표면을 펴요", desc: "물을 묻힌 붓으로 거친 외면과 접합부를 부드럽게 정리합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
+  { title: "2분할 홈 내기", verb: "와도로 곧은 홈을 내요", desc: "수키와가 두 장으로 갈라지도록 와도로 양쪽에 일정한 깊이의 홈을 냅니다.", hint: "와도를 잡고 점선을 따라 위에서 아래로 그으세요.", tool: "와도", mode: "rub" },
+  { title: "와통에서 분리", verb: "와통을 천천히 빼내요", desc: "반건조된 점토가 무너지지 않도록 안쪽의 원통와통을 조심스럽게 분리합니다.", hint: "나무 손잡이를 잡고 오른쪽으로 여러 번 당기세요.", tool: "와통", mode: "rub" },
+  { title: "내면 깎기", verb: "칼로 두께를 고르게 해요", desc: "내면의 두꺼운 곳과 절단면을 얇게 깎아 곡률과 측면을 정돈합니다.", hint: "칼을 잡고 기와 안쪽을 골고루 훑으세요.", tool: "손질칼", mode: "rub" },
+  { title: "가마에서 굽기", verb: "불씨를 살려 기와를 구워요", desc: "완전히 건조된 기와를 가마에서 구워 단단한 전통 기와로 완성합니다.", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },
 ];
 
-const clays = [
-  { name: "가는 점토", note: "입자가 곱고 점성이 좋아요", color: "#9c5f3d", good: true },
-  { name: "모래 섞인 흙", note: "입자가 거칠고 잘 갈라져요", color: "#c7935c", good: false },
-  { name: "유기질 흙", note: "불순물이 많아 소성에 불리해요", color: "#66503c", good: false },
+const clayPieces = [
+  { x: 12, y: 23, good: true, c: "#a84e32" }, { x: 27, y: 61, good: false, c: "#c59a65" },
+  { x: 42, y: 25, good: true, c: "#964129" }, { x: 56, y: 65, good: false, c: "#5f5843" },
+  { x: 70, y: 28, good: true, c: "#b05739" }, { x: 82, y: 64, good: false, c: "#b78d5d" },
 ];
+
+function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [drag, setDrag] = useState<number | null>(null);
+  const [pos, setPos] = useState<Point>({ x: 14, y: 70 });
+  const [rub, setRub] = useState(0);
+  const [caught, setCaught] = useState<number[]>([]);
+  const [wrong, setWrong] = useState<number | null>(null);
+  const [marks, setMarks] = useState<Point[]>([]);
+  const finished = step === 0 ? caught.length === 3 : rub >= 100;
+
+  useEffect(() => { setDrag(null); setPos({ x: 14, y: 70 }); setRub(0); setCaught([]); setWrong(null); setMarks([]); }, [step]);
+  useEffect(() => { if (finished) { const t = window.setTimeout(onFinish, 500); return () => window.clearTimeout(t); } }, [finished, onFinish]);
+
+  const point = (e: PointerEvent): Point => {
+    const r = box.current!.getBoundingClientRect();
+    return { x: Math.max(3, Math.min(97, ((e.clientX - r.left) / r.width) * 100)), y: Math.max(5, Math.min(94, ((e.clientY - r.top) / r.height) * 100)) };
+  };
+  const start = (e: PointerEvent, id = 99) => { e.currentTarget.setPointerCapture(e.pointerId); setDrag(id); setPos(point(e)); };
+  const move = (e: PointerEvent) => {
+    if (drag === null) return;
+    const p = point(e); setPos(p);
+    if (steps[step].mode === "rub" && p.x > 24 && p.x < 82 && p.y > 18 && p.y < 82) {
+      setRub(v => Math.min(100, v + 2.8));
+      setMarks(m => [...m.slice(-42), p]);
+    }
+  };
+  const end = () => {
+    if (drag === null) return;
+    if (step === 0 && drag < 6) {
+      const inBasket = pos.x > 66 && pos.y > 48;
+      if (inBasket && clayPieces[drag].good) setCaught(c => c.includes(drag) ? c : [...c, drag]);
+      else if (inBasket) { setWrong(drag); window.setTimeout(() => setWrong(null), 650); }
+    } else if (steps[step].mode === "drop") {
+      if (pos.x > 39 && pos.x < 70 && pos.y > 22 && pos.y < 83) setRub(100);
+      else setPos({ x: 14, y: 70 });
+    }
+    setDrag(null);
+  };
+
+  const toolName = ["", "밀대", "통보", "흙판", "붓", "와도", "와통 손잡이", "손질칼", "부채"][step];
+
+  return <div className={`craft-game game-${step} ${finished ? "game-finished" : ""}`} ref={box} onPointerMove={move} onPointerUp={end} onPointerCancel={end}>
+    <div className="game-head"><span>{finished ? "✓ 체험 성공" : "마우스·손가락으로 직접 움직여보세요"}</span><b>{step === 0 ? `${caught.length}/3` : `${Math.round(rub)}%`}</b></div>
+    {step === 0 ? <>
+      <div className="earth-pile" />
+      {clayPieces.map((p, i) => !caught.includes(i) && <button key={i} aria-label={`${p.good ? "가는 점토" : "거친 흙"} 조각`} className={`clay-piece ${wrong === i ? "wrong" : ""}`} style={{ left: `${drag === i ? pos.x : p.x}%`, top: `${drag === i ? pos.y : p.y}%`, background: p.c }} onPointerDown={e => start(e, i)} />)}
+      <div className={`basket ${drag !== null ? "ready" : ""}`}><i/><span>좋은 흙 바구니</span><small>{caught.length ? "●".repeat(caught.length) : "여기에 놓기"}</small></div>
+    </> : <>
+      <div className="work-target">
+        <div className="target-cylinder"><i className="target-cloth"/><i className="target-clay" style={{ opacity: step >= 3 ? 1 : .28 }}/></div>
+        {marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 55 }}/>) }
+        {step === 1 && <div className="slab" style={{ transform: `scaleX(${.45 + rub / 180})` }}/>} 
+        {step === 5 && <div className="cut-line" style={{ height: `${rub}%` }}/>} 
+        {step === 6 && <div className="mold-pull" style={{ transform: `translateX(${rub * .55}px)` }}/>} 
+        {step === 8 && <div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div>}
+      </div>
+      <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>
+    </>}
+    <div className="game-instruction">{finished ? "완료! 다음 단계로 이동합니다." : steps[step].hint}</div>
+  </div>;
+}
 
 export default function Home() {
   const [active, setActive] = useState(0);
   const [done, setDone] = useState<number[]>([]);
-  const [clay, setClay] = useState<number | null>(null);
-  const [notice, setNotice] = useState("");
-  const progress = Math.round((done.length / steps.length) * 100);
+  const [celebrate, setCelebrate] = useState(false);
+  const progress = Math.round(done.length / 9 * 100);
 
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") setActive((v) => Math.min(8, v + 1));
-      if (e.key === "ArrowLeft") setActive((v) => Math.max(0, v - 1));
-    };
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, []);
-
-  const complete = () => {
-    if (active === 0 && clay !== 0) {
-      setNotice("기와에는 입자가 곱고 점성이 좋은 ‘가는 점토’가 알맞아요.");
-      return;
-    }
-    setDone((d) => d.includes(active) ? d : [...d, active]);
-    setNotice(active === 8 ? "축하합니다! 원통와통 기와 한 장을 완성했어요." : "잘했어요! 다음 단계로 이동합니다.");
-    if (active < 8) window.setTimeout(() => { setActive(active + 1); setNotice(""); }, 650);
+  const finish = () => {
+    setDone(d => d.includes(active) ? d : [...d, active]);
+    if (active < 8) window.setTimeout(() => setActive(a => a + 1), 850);
+    else setCelebrate(true);
   };
+  const reset = () => { setActive(0); setDone([]); setCelebrate(false); };
 
-  const reset = () => { setActive(0); setDone([]); setClay(null); setNotice(""); };
+  return <main>
+    <header className="topbar"><a className="brand" href="#top"><span className="brand-mark">瓦</span><span>와공방</span></a><nav><a href="#experience">제작 체험</a><a href="#learn">도구 이야기</a></nav><a className="mini-cta" href="#experience">체험 시작</a></header>
+    <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow"><span/> 손끝에서 깨어나는 옛 기술</p><h1>흙이<br/><em>기와</em>가 되는 시간</h1><p className="intro">클릭만 하는 체험이 아닙니다. 흙을 옮기고, 붓을 쓸고, 칼을 움직이며 아홉 번의 손길을 직접 완성해보세요.</p><a className="primary" href="#experience">손으로 체험 시작하기 <span>↓</span></a><div className="hero-facts"><div><b>9</b><span>드래그 미션</span></div><div><b>瓦桶</b><span>원통와통 방식</span></div><div><b>1</b><span>완성할 기와</span></div></div></div><div className="hero-art"><div className="sun"/><div className="stamp">圓筒<br/>瓦桶</div><div className="cylinder"><div className="cloth"/><div className="clay-wrap"/><div className="rim"/></div><div className="hand hand-one"/><div className="hand hand-two"/><p className="art-label">도구를 직접 움직여<br/>기와를 완성합니다</p></div></section>
 
-  return (
-    <main>
-      <header className="topbar">
-        <a className="brand" href="#top" aria-label="와공방 처음으로"><span className="brand-mark">瓦</span><span>와공방</span></a>
-        <nav aria-label="주요 메뉴"><a href="#experience">제작 체험</a><a href="#learn">도구 이야기</a></nav>
-        <a className="mini-cta" href="#experience">체험 시작</a>
-      </header>
+    <section className="experience" id="experience"><div className="section-heading"><div><p className="eyebrow"><span/> 손으로 배우는 아홉 단계</p><h2>기와 제작 체험</h2></div><p>도구를 잡고 작업 영역으로 움직여보세요.<br/>마우스와 터치 모두 사용할 수 있습니다.</p></div>
+      <div className="progress-wrap"><div className="progress-meta"><span>나의 제작 여정</span><strong>{progress}% 완성</strong></div><div className="progress"><i style={{width:`${progress}%`}}/></div></div>
+      <div className="step-strip">{steps.map((s,i)=><button key={s.title} className={`${active===i?"active":""} ${done.includes(i)?"done":""}`} onClick={()=>setActive(i)}><span>{done.includes(i)?"✓":String(i+1).padStart(2,"0")}</span><b>{s.title}</b></button>)}</div>
+      <article className="workbench interactive"><div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div><div className="step-content"><span className="tag">{steps[active].tool} 체험</span><h3>{steps[active].verb}</h3><p>{steps[active].desc}</p><CraftGame key={active} step={active} onFinish={finish}/><aside><b>장인의 한마디</b><p>{steps[active].hint}</p></aside><div className="actions">{active>0&&<button className="back" onClick={()=>setActive(active-1)}>← 이전 단계</button>}{done.includes(active)&&active<8&&<button className="complete" onClick={()=>setActive(active+1)}>다음 단계 →</button>}</div></div></article>
+    </section>
 
-      <section className="hero" id="top">
-        <div className="hero-copy">
-          <p className="eyebrow"><span /> 손끝에서 깨어나는 옛 기술</p>
-          <h1>흙이<br/><em>기와</em>가 되는 시간</h1>
-          <p className="intro">원통와통에 흙판을 붙이고, 다듬고, 나누고, 굽는 아홉 번의 손길. 전통 기와 제작을 직접 따라가 보세요.</p>
-          <a className="primary" href="#experience">나만의 기와 만들기 <span>↓</span></a>
-          <div className="hero-facts"><div><b>9</b><span>제작 단계</span></div><div><b>瓦桶</b><span>원통와통 방식</span></div><div><b>1</b><span>완성할 기와</span></div></div>
-        </div>
-        <div className="hero-art" aria-label="원통와통에 점토를 붙이는 모습">
-          <div className="sun"/><div className="stamp">圓筒<br/>瓦桶</div>
-          <div className="cylinder"><div className="cloth"/><div className="clay-wrap"/><div className="rim"/></div>
-          <div className="hand hand-one"/><div className="hand hand-two"/>
-          <p className="art-label">점토판을 와통의 곡면에<br/>고르게 밀착시킵니다</p>
-        </div>
-      </section>
-
-      <section className="experience" id="experience">
-        <div className="section-heading"><div><p className="eyebrow"><span /> 아홉 번의 손길</p><h2>기와 제작 체험</h2></div><p>단계를 선택해 전통 제와장의 손길을 따라가세요.<br/>키보드의 ← → 키로도 이동할 수 있습니다.</p></div>
-        <div className="progress-wrap"><div className="progress-meta"><span>나의 제작 여정</span><strong>{progress}% 완성</strong></div><div className="progress"><i style={{width: `${progress}%`}}/></div></div>
-
-        <div className="step-strip" role="tablist" aria-label="기와 제작 단계">
-          {steps.map((s, i) => <button key={s.title} role="tab" aria-selected={active === i} className={`${active === i ? "active" : ""} ${done.includes(i) ? "done" : ""}`} onClick={() => {setActive(i); setNotice("");}}><span>{done.includes(i) ? "✓" : String(i+1).padStart(2,"0")}</span><b>{s.short}</b></button>)}
-        </div>
-
-        <article className="workbench">
-          <div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div>
-          <div className="step-content"><span className="tag">{steps[active].tag}</span><h3>{steps[active].title}</h3><p>{steps[active].desc}</p>
-            {active === 0 && <div className="clay-options" aria-label="사용할 흙 고르기">{clays.map((c, i) => <button key={c.name} onClick={() => {setClay(i); setNotice(i === 0 ? "좋은 선택이에요! 이 흙은 기와 성형에 알맞습니다." : "이 흙은 갈라지거나 불순물이 남을 수 있어요.");}} className={clay === i ? "selected" : ""}><i style={{background:c.color}}/><span><b>{c.name}</b><small>{c.note}</small></span>{clay === i && <strong>{c.good ? "알맞음" : "다시 생각"}</strong>}</button>)}</div>}
-            {active !== 0 && <div className={`process-visual visual-${active}`}><div className="tool-shape"/><div className="tile-shape"/><span>{steps[active].short}</span></div>}
-            <aside><b>장인의 한마디</b><p>{steps[active].tip}</p></aside>
-            <div className="actions"><button className="complete" onClick={complete}>{done.includes(active) ? "완료한 단계 ✓" : "이 단계 체험 완료"}</button>{active > 0 && <button className="back" onClick={() => setActive(active-1)}>이전 단계</button>}</div>
-            <p className="notice" aria-live="polite">{notice}</p>
-          </div>
-        </article>
-      </section>
-
-      <section className="learn" id="learn"><div><p className="eyebrow light"><span/> 오늘의 도구</p><h2>와통과 통보,<br/>곡률을 만드는 한 쌍</h2></div><div className="learn-card"><b>瓦桶 <small>와통</small></b><p>기와에 일정한 곡률을 주는 원통형 성형틀입니다. 같은 크기와 형태의 기와를 반복해 만들 수 있게 해줍니다.</p></div><div className="learn-card"><b>筒褓 <small>통보</small></b><p>와통과 점토 사이에 두르는 천입니다. 점토가 달라붙는 것을 막고, 기와 내면에 직물결을 남깁니다.</p></div></section>
-
-      <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.</p><button onClick={reset}>체험 처음부터 ↺</button></footer>
-    </main>
-  );
+    <section className="learn" id="learn"><div><p className="eyebrow light"><span/> 오늘의 도구</p><h2>와통과 통보,<br/>곡률을 만드는 한 쌍</h2></div><div className="learn-card"><b>瓦桶 <small>와통</small></b><p>기와에 일정한 곡률을 주는 원통형 성형틀입니다. 같은 크기의 기와를 반복해 만들 수 있게 합니다.</p></div><div className="learn-card"><b>筒褓 <small>통보</small></b><p>와통과 점토 사이에 두르는 천입니다. 점토가 붙는 것을 막고 내면에 직물결을 남깁니다.</p></div></section>
+    <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.</p><button onClick={reset}>체험 처음부터 ↺</button></footer>
+    {celebrate&&<div className="celebrate" role="dialog" aria-modal="true"><div><span>瓦</span><p>아홉 번의 손길을 모두 마쳤습니다</p><h2>나만의 기와 완성!</h2><button onClick={reset}>다시 만들어보기</button><button className="close" onClick={()=>setCelebrate(false)}>닫기</button></div></div>}
+  </main>;
 }
