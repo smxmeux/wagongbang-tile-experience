@@ -102,7 +102,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
       <div className={`basket ${drag !== null ? "ready" : ""}`}><i/><span>좋은 흙 바구니</span><small>{caught.length ? "●".repeat(caught.length) : "여기에 놓기"}</small></div>
     </> : <>
       <div className={`work-target scene-${step}`}>
-        {step === 1 ? <div className="clay-frame"><span>점토 적층 틀</span><div className="stacked-clay">{Array.from({length:stacked},(_,i)=><i key={i}/>)}</div>{stacked>=5&&<div className="cut-sheets">{Array.from({length:Math.min(3,Math.floor(rub/34))},(_,i)=><i key={i}/>)}</div>}</div>
+        {step === 1 ? <div className="clay-frame"><span>점토 적층 틀</span><div className="stacked-clay">{Array.from({length:Math.max(1,stacked-Math.floor(rub/25))},(_,i)=><i key={i}/>)}</div>{stacked>=5&&<div className="cut-sheets">{Array.from({length:Math.min(3,Math.floor(rub/34))},(_,i)=><i key={i}/>)}</div>}</div>
         : step === 6 ? <div className="release-scene"><div className="tile-shell"/><div className="mold-pull" style={{ transform: `translateY(${-rub * 1.35}px)` }}><i/></div></div>
         : step === 7 ? <div className="inner-tile"><span>기와 안쪽 · 내면</span>{marks.map((_,i)=><i key={i} className="inner-groove" style={{left:`${20+(i%8)*8}%`,top:`${18+(Math.floor(i/8)%6)*12}%`,transform:`rotate(${-4+(i%3)*4}deg)`}}/>)}</div>
         : step === 8 ? <div className="kiln"><div className="fired-tile"/><div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div></div>
@@ -117,7 +117,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
         {step !== 7 && step !== 6 && marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 90 }}/>) }
         {step === 5 && <div className="split-tile" style={{ "--split": `${rub / 18}px` } as CSSProperties}><i className="split-left"/><i className="split-right"/><b className="cut-line" style={{ height: `${rub}%` }}/></div>} 
       </div>
-      {step === 1 && stacked < 5 ? <div className="stack-basket"><span>점토 바구니</span>{Array.from({length:5-stacked},(_,i)=>{const id=10+stacked+i;return <button key={id} className="stack-lump" style={{left:`${drag===id?pos.x:18+(i%2)*12}%`,top:`${drag===id?pos.y:42+Math.floor(i/2)*15}%`}} onPointerDown={e=>start(e,id)} aria-label="점토 덩어리 옮기기"/>})}</div> : <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>}
+      {step === 1 && stacked < 5 ? <div className="stack-basket"><div className="stack-basket-visual"><i/><span>점토 바구니</span></div>{Array.from({length:5-stacked},(_,i)=>{const id=10+stacked+i;return <button key={id} className="stack-lump" style={{left:`${drag===id?pos.x:18+(i%2)*12}%`,top:`${drag===id?pos.y:46+Math.floor(i/2)*12}%`}} onPointerDown={e=>start(e,id)} aria-label="점토 덩어리 옮기기"/>})}</div> : <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>}
     </>}
     <div className="game-instruction">{finished ? "완료! 다음 단계로 이동합니다." : step===1&&stacked<5 ? "점토 덩어리를 직사각형 틀 안에 차곡차곡 놓으세요." : step===1 ? "쨀줄을 좌우로 당겨 흙판 3장을 잘라내세요." : steps[step].hint}</div>
   </div>;
