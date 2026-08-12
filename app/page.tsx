@@ -68,10 +68,23 @@ const steps: Step[] = [
   { title: "가마에서 굽기", verb: "불씨를 살려 기와를 구워요", desc: "완전히 건조된 기와를 가마에서 구워 단단한 전통 기와로 완성합니다.", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },
 ];
 
+// 영상 파일을 public/videos 폴더에 넣은 뒤 해당 단계의 src를 "/videos/파일명.mp4"로 바꾸면 됩니다.
+const stepVideos: { src: string | null; label: string; filename: string }[] = [
+  { src: null, label: "흙을 살피고 고르는 실제 과정", filename: "step-01-clay.mp4" },
+  { src: null, label: "점토 적층과 쨀줄 절단 과정", filename: "step-02-slab.mp4" },
+  { src: null, label: "원통와통에 통보를 씌우는 과정", filename: "step-03-cloth.mp4" },
+  { src: null, label: "통보 위에 흙판을 붙이는 과정", filename: "step-04-attach.mp4" },
+  { src: null, label: "붓으로 외면을 다듬는 과정", filename: "step-05-brush.mp4" },
+  { src: null, label: "와도로 2분할 홈을 내는 과정", filename: "step-06-cut.mp4" },
+  { src: null, label: "성형체에서 와통을 빼는 과정", filename: "step-07-release.mp4" },
+  { src: null, label: "기와 내면을 칼로 손질하는 과정", filename: "step-08-trim.mp4" },
+  { src: null, label: "가마에서 기와를 굽는 과정", filename: "step-09-fire.mp4" },
+];
+
 const clayPieces = [
-  { x: 10, y: 35, good: true, c: "#a84e32", name: "가는 점토", detail: "점성이 좋고 입자가 고와요" },
-  { x: 23, y: 31, good: false, c: "#c59a65", name: "모래 섞인 흙", detail: "거칠고 쉽게 갈라져요" },
-  { x: 36, y: 37, good: true, c: "#964129", name: "붉은 점토", detail: "성형하기 좋은 점토예요" },
+  { x: 10, y: 45, good: true, c: "#a84e32", name: "가는 점토", detail: "점성이 좋고 입자가 고와요" },
+  { x: 23, y: 41, good: false, c: "#c59a65", name: "모래 섞인 흙", detail: "거칠고 쉽게 갈라져요" },
+  { x: 36, y: 47, good: true, c: "#964129", name: "붉은 점토", detail: "성형하기 좋은 점토예요" },
   { x: 12, y: 63, good: false, c: "#5f5843", name: "유기질 흙", detail: "불순물이 많이 섞였어요" },
   { x: 25, y: 66, good: true, c: "#b05739", name: "고운 점토", detail: "매끈하고 잘 뭉쳐져요" },
   { x: 38, y: 62, good: false, c: "#b78d5d", name: "자갈 섞인 흙", detail: "큰 알갱이가 보여요" },
@@ -199,7 +212,15 @@ export default function Home() {
     <section className="experience" id="experience"><div className="section-heading"><div><p className="eyebrow"><span/> 04 · 손으로 배우는 아홉 단계</p><h2>기와 제작 체험</h2></div><p>도구를 잡고 작업 영역으로 움직여보세요.<br/>마우스와 터치 모두 사용할 수 있습니다.</p></div>
       <div className="progress-wrap"><div className="progress-meta"><span>나의 제작 여정</span><strong>{progress}% 완성</strong></div><div className="progress"><i style={{width:`${progress}%`}}/></div></div>
       <div className="step-strip">{steps.map((s,i)=><button key={s.title} disabled={i > unlocked} aria-label={i > unlocked ? `${s.title}, 이전 단계를 먼저 완료하세요` : s.title} className={`${active===i?"active":""} ${done.includes(i)?"done":""} ${i>unlocked?"locked":""}`} onClick={()=>{ if(i<=unlocked) setActive(i); }}><span>{done.includes(i)?"✓":i>unlocked?"🔒":String(i+1).padStart(2,"0")}</span><b>{s.title}</b></button>)}</div>
-      <article className="workbench interactive"><div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div><div className="step-content"><span className="tag">{steps[active].tool} 체험</span><h3>{steps[active].verb}</h3><p>{steps[active].desc}</p><CraftGame key={active} step={active} onFinish={finish}/><aside><b>장인의 한마디</b><p>{steps[active].hint}</p></aside><div className="actions">{active>0&&<button className="back" onClick={()=>setActive(active-1)}>← 이전 단계</button>}{done.includes(active)&&active<8&&<button className="complete" onClick={()=>setActive(active+1)}>다음 단계 →</button>}</div></div></article>
+      <article className="workbench interactive"><div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div><div className="step-content"><span className="tag">{steps[active].tool} 체험</span><h3>{steps[active].verb}</h3><p>{steps[active].desc}</p>
+        <div className="experience-duo">
+          <div className="hands-on-panel"><div className="panel-label"><span>INTERACTIVE</span><b>직접 체험</b></div><CraftGame key={active} step={active} onFinish={finish}/></div>
+          <div className="step-video-panel"><div className="panel-label"><span>DOCUMENTARY</span><b>실제 제작 영상</b></div><div className="step-video-frame">
+            {stepVideos[active].src ? <video key={stepVideos[active].src} controls playsInline preload="metadata" src={stepVideos[active].src}/>
+            : <div className="step-video-empty"><i>▶</i><strong>{steps[active].title}</strong><p>{stepVideos[active].label}</p><small>영상 파일 자리 · 16:9</small><code>public/videos/{stepVideos[active].filename}</code></div>}
+          </div></div>
+        </div>
+        <aside><b>장인의 한마디</b><p>{steps[active].hint}</p></aside><div className="actions">{active>0&&<button className="back" onClick={()=>setActive(active-1)}>← 이전 단계</button>}{done.includes(active)&&active<8&&<button className="complete" onClick={()=>setActive(active+1)}>다음 단계 →</button>}</div></div></article>
     </section>
 
     <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.</p><button onClick={reset}>체험 처음부터 ↺</button></footer>
