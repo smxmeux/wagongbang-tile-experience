@@ -13,7 +13,7 @@ function ParticleStory() {
   const [meshReady, setMeshReady] = useState(false);
 
   useEffect(() => {
-    let points: number[][] = [], faces: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
+    let points: number[][] = [], faces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
@@ -45,10 +45,12 @@ function ParticleStory() {
       lastX = event.clientX; lastY = event.clientY;
     };
     const onPointerUp = () => { dragging = false; };
-    const draw = () => {
+    const draw = (time = 0) => {
       if (!alive || !canvas.current) return;
+      if (time - lastDraw < 32) { frame=requestAnimationFrame(draw); return; }
+      lastDraw = time;
       const c = canvas.current, ctx = c.getContext("2d")!;
-      const dpr = Math.min(devicePixelRatio, 2), w = c.clientWidth, h = c.clientHeight;
+      const dpr = Math.min(devicePixelRatio, innerWidth < 760 ? 1 : 1.25), w = c.clientWidth, h = c.clientHeight;
       if (c.width !== w*dpr || c.height !== h*dpr) { c.width=w*dpr; c.height=h*dpr; }
       ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
       const eased = progress < .08 ? 0 : 1 - Math.pow(1 - Math.min(1,(progress-.08)/.7), 3);
@@ -77,10 +79,11 @@ function ParticleStory() {
           if (face.length < 3) continue;
           const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
           if (!a || !b || !d) continue;
+          if ((b.x-a.x)*(d.y-a.y)-(b.y-a.y)*(d.x-a.x) > 0) continue;
           ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.closePath();
         }
         ctx.fillStyle="rgba(178,184,181,.58)"; ctx.fill();
-        ctx.strokeStyle="rgba(242,244,240,.18)"; ctx.lineWidth=.45; ctx.stroke(); ctx.restore();
+        ctx.restore();
       }
       ctx.save(); ctx.beginPath(); ctx.rect(0,0,dividerX,h); ctx.clip();
       ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
