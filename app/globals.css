@@ -56,3 +56,7 @@ body{background:#f2f2ef}.topbar{background:rgba(242,242,239,.82);backdrop-filter
 .workbench.interactive{display:block;padding:42px 3.2% 55px}.workbench.interactive .step-number{display:flex;align-items:baseline;gap:10px;width:100%;font-size:26px;line-height:1;border:0;border-bottom:1px solid rgba(0,0,0,.2);padding:0 0 14px;margin-bottom:24px}.workbench.interactive .step-number span{display:inline;margin:0;font-size:9px}.workbench.interactive .step-content{padding:0;max-width:none}.workbench.interactive .step-content>p{max-width:780px}.experience-duo{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.hands-on-panel,.step-video-panel{display:grid;grid-template-rows:auto 470px}.experience-duo .craft-game,.step-video-frame{width:100%;height:470px;min-height:470px}
 @media(max-width:1100px){.experience-duo{grid-template-columns:1fr}.hands-on-panel,.step-video-panel{grid-template-rows:auto 440px}.experience-duo .craft-game,.step-video-frame{height:440px;min-height:440px;aspect-ratio:auto}}
 @media(max-width:760px){.workbench.interactive{padding:30px 18px 42px}.workbench.interactive .step-number{font-size:22px}.experience-duo .craft-game{height:410px}}
+
+/* Center every production fixture except the clay-selection scene */
+.craft-game:not(.game-0) .work-target{left:14%;right:14%;top:14%;bottom:18%;place-items:center}.craft-game:not(.game-0) .work-target>*{margin-left:auto;margin-right:auto}.vertical-clay-row>span{display:none}.vertical-clay-row:before{top:22%;bottom:15%}
+@media(max-width:760px){.craft-game:not(.game-0) .work-target{left:10%;right:10%}}
