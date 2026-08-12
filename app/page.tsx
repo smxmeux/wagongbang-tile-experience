@@ -25,16 +25,24 @@ const clayPieces = [
 
 function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   const box = useRef<HTMLDivElement>(null);
+  const finishFired = useRef(false);
   const [drag, setDrag] = useState<number | null>(null);
   const [pos, setPos] = useState<Point>({ x: 14, y: 70 });
   const [rub, setRub] = useState(0);
   const [caught, setCaught] = useState<number[]>([]);
   const [wrong, setWrong] = useState<number | null>(null);
   const [marks, setMarks] = useState<Point[]>([]);
-  const finished = step === 0 ? caught.length === 3 : rub >= 100;
+  const [covered, setCovered] = useState<string[]>([]);
+  const brushPercent = Math.round((covered.length / 49) * 100);
+  const finished = step === 0 ? caught.length === 3 : step === 4 ? brushPercent >= 86 : rub >= 100;
 
-  useEffect(() => { setDrag(null); setPos({ x: 14, y: 70 }); setRub(0); setCaught([]); setWrong(null); setMarks([]); }, [step]);
-  useEffect(() => { if (finished) { const t = window.setTimeout(onFinish, 500); return () => window.clearTimeout(t); } }, [finished, onFinish]);
+  useEffect(() => { finishFired.current = false; setDrag(null); setPos({ x: 14, y: 70 }); setRub(0); setCaught([]); setWrong(null); setMarks([]); setCovered([]); }, [step]);
+  useEffect(() => {
+    if (!finished || finishFired.current) return;
+    finishFired.current = true;
+    const t = window.setTimeout(onFinish, 500);
+    return () => window.clearTimeout(t);
+  }, [finished, onFinish]);
 
   const point = (e: PointerEvent): Point => {
     const r = box.current!.getBoundingClientRect();
@@ -45,8 +53,21 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
     if (drag === null) return;
     const p = point(e); setPos(p);
     if (steps[step].mode === "rub" && p.x > 24 && p.x < 82 && p.y > 18 && p.y < 82) {
-      setRub(v => Math.min(100, v + 2.8));
-      setMarks(m => [...m.slice(-42), p]);
+      if (step === 4) {
+        if (p.x >= 39 && p.x <= 67 && p.y >= 22 && p.y <= 78) {
+          const col = Math.max(0, Math.min(6, Math.floor(((p.x - 39) / 28) * 7)));
+          const row = Math.max(0, Math.min(6, Math.floor(((p.y - 22) / 56) * 7)));
+          const cells: string[] = [];
+          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            const cx = col + dx, cy = row + dy;
+            if (cx >= 0 && cx < 7 && cy >= 0 && cy < 7) cells.push(`${cx}-${cy}`);
+          }
+          setCovered(old => Array.from(new Set([...old, ...cells])));
+        }
+      } else {
+        setRub(v => Math.min(100, v + 2.8));
+        setMarks(m => [...m.slice(-42), p]);
+      }
     }
   };
   const end = () => {
@@ -65,7 +86,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   const toolName = ["", "밀대", "통보", "흙판", "붓", "와도", "와통 손잡이", "손질칼", "부채"][step];
 
   return <div className={`craft-game game-${step} ${finished ? "game-finished" : ""}`} ref={box} onPointerMove={move} onPointerUp={end} onPointerCancel={end}>
-    <div className="game-head"><span>{finished ? "✓ 체험 성공" : "마우스·손가락으로 직접 움직여보세요"}</span><b>{step === 0 ? `${caught.length}/3` : `${Math.round(rub)}%`}</b></div>
+    <div className="game-head"><span>{finished ? "✓ 체험 성공" : "마우스·손가락으로 직접 움직여보세요"}</span><b>{step === 0 ? `${caught.length}/3` : `${step === 4 ? brushPercent : Math.round(rub)}%`}</b></div>
     {step === 0 ? <>
       <div className="earth-pile" />
       {clayPieces.map((p, i) => !caught.includes(i) && <button key={i} aria-label={`${p.good ? "가는 점토" : "거친 흙"} 조각`} className={`clay-piece ${wrong === i ? "wrong" : ""}`} style={{ left: `${drag === i ? pos.x : p.x}%`, top: `${drag === i ? pos.y : p.y}%`, background: p.c }} onPointerDown={e => start(e, i)} />)}
@@ -73,6 +94,10 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
     </> : <>
       <div className="work-target">
         <div className="target-cylinder"><i className="target-cloth"/><i className="target-clay" style={{ opacity: step >= 3 ? 1 : .28 }}/></div>
+        {step === 4 && <div className="brush-coverage" aria-hidden="true">{Array.from({ length: 49 }, (_, i) => {
+          const col = i % 7, row = Math.floor(i / 7), painted = covered.includes(`${col}-${row}`);
+          return <i key={i} className={painted ? "painted" : ""} />;
+        })}</div>}
         {marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 55 }}/>) }
         {step === 1 && <div className="slab" style={{ transform: `scaleX(${.45 + rub / 180})` }}/>} 
         {step === 5 && <div className="cut-line" style={{ height: `${rub}%` }}/>} 
@@ -90,10 +115,11 @@ export default function Home() {
   const [done, setDone] = useState<number[]>([]);
   const [celebrate, setCelebrate] = useState(false);
   const progress = Math.round(done.length / 9 * 100);
+  const unlocked = Math.min(8, done.length);
 
   const finish = () => {
     setDone(d => d.includes(active) ? d : [...d, active]);
-    if (active < 8) window.setTimeout(() => setActive(a => a + 1), 850);
+    if (active < 8) window.setTimeout(() => setActive(active + 1), 850);
     else setCelebrate(true);
   };
   const reset = () => { setActive(0); setDone([]); setCelebrate(false); };
@@ -104,7 +130,7 @@ export default function Home() {
 
     <section className="experience" id="experience"><div className="section-heading"><div><p className="eyebrow"><span/> 손으로 배우는 아홉 단계</p><h2>기와 제작 체험</h2></div><p>도구를 잡고 작업 영역으로 움직여보세요.<br/>마우스와 터치 모두 사용할 수 있습니다.</p></div>
       <div className="progress-wrap"><div className="progress-meta"><span>나의 제작 여정</span><strong>{progress}% 완성</strong></div><div className="progress"><i style={{width:`${progress}%`}}/></div></div>
-      <div className="step-strip">{steps.map((s,i)=><button key={s.title} className={`${active===i?"active":""} ${done.includes(i)?"done":""}`} onClick={()=>setActive(i)}><span>{done.includes(i)?"✓":String(i+1).padStart(2,"0")}</span><b>{s.title}</b></button>)}</div>
+      <div className="step-strip">{steps.map((s,i)=><button key={s.title} disabled={i > unlocked} aria-label={i > unlocked ? `${s.title}, 이전 단계를 먼저 완료하세요` : s.title} className={`${active===i?"active":""} ${done.includes(i)?"done":""} ${i>unlocked?"locked":""}`} onClick={()=>{ if(i<=unlocked) setActive(i); }}><span>{done.includes(i)?"✓":i>unlocked?"🔒":String(i+1).padStart(2,"0")}</span><b>{s.title}</b></button>)}</div>
       <article className="workbench interactive"><div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div><div className="step-content"><span className="tag">{steps[active].tool} 체험</span><h3>{steps[active].verb}</h3><p>{steps[active].desc}</p><CraftGame key={active} step={active} onFinish={finish}/><aside><b>장인의 한마디</b><p>{steps[active].hint}</p></aside><div className="actions">{active>0&&<button className="back" onClick={()=>setActive(active-1)}>← 이전 단계</button>}{done.includes(active)&&active<8&&<button className="complete" onClick={()=>setActive(active+1)}>다음 단계 →</button>}</div></div></article>
     </section>
 
