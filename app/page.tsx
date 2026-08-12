@@ -57,15 +57,15 @@ function ParticleStory() {
 }
 
 const steps: Step[] = [
-  { title: "흙 고르기", verb: "알맞은 재료를 바구니에 담아요", desc: "여러 흙과 모래가 섞여 있어요. 기와 제작에 사용할 가는 점토, 고운 점토, 굵은 모래를 찾아 바구니로 옮겨보세요.", hint: "가는 점토·고운 점토·굵은 모래, 세 가지 재료를 고르세요.", tool: "흙", mode: "drop" },
-  { title: "흙판 만들기", verb: "점토를 쌓고 쨀줄로 잘라요", desc: "점토 3개를 직사각형 틀 안에 층층이 쌓은 뒤, 쨀줄을 가로로 당겨 일정한 두께의 흙판을 만듭니다.", hint: "왼쪽 점토 3개를 틀에 쌓고, 쨀줄로 3장의 흙판을 잘라내세요.", tool: "쨀줄", mode: "rub" },
-  { title: "통보 씌우기", verb: "천을 와통에 감아요", desc: "원통와통에 통보를 팽팽하게 씌워 점토가 나무에 달라붙지 않도록 합니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
-  { title: "흙판 붙이기", verb: "흙판을 와통에 붙여요", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
-  { title: "외면 다듬기", verb: "붓으로 표면을 펴요", desc: "물을 묻힌 붓으로 거친 외면과 접합부를 부드럽게 정리합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
-  { title: "2분할 홈 내기", verb: "와도로 곧은 홈을 내요", desc: "수키와가 두 장으로 갈라지도록 와도로 양쪽에 일정한 깊이의 홈을 냅니다.", hint: "와도를 잡고 점선을 따라 위에서 아래로 그으세요.", tool: "와도", mode: "rub" },
-  { title: "와통에서 분리", verb: "와통을 위로 빼내요", desc: "반건조된 점토 껍질은 그대로 두고, 안쪽의 원통와통과 통보를 위로 조심스럽게 빼냅니다.", hint: "와통 손잡이를 잡고 위쪽으로 여러 번 끌어올리세요.", tool: "와통", mode: "rub" },
-  { title: "내면 깎기", verb: "칼로 두께를 고르게 해요", desc: "내면의 두꺼운 곳과 절단면을 얇게 깎아 곡률과 측면을 정돈합니다.", hint: "칼을 잡고 기와 안쪽을 골고루 훑으세요.", tool: "손질칼", mode: "rub" },
-  { title: "가마에서 굽기", verb: "불씨를 살려 기와를 구워요", desc: "완전히 건조된 기와를 가마에서 구워 단단한 전통 기와로 완성합니다.", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },
+  { title: "흙고름", verb: "흙을 채취해 돌과 이물질을 제거하고 여러 흙을 고르게 혼합한다.", desc: "여러 흙과 모래가 섞여 있어요. 기와 제작에 사용할 가는 점토, 고운 점토, 굵은 모래를 찾아 바구니로 옮겨보세요.", hint: "가는 점토·고운 점토·굵은 모래, 세 가지 재료를 고르세요.", tool: "흙", mode: "drop" },
+  { title: "소지 작업", verb: "숙성된 흙을 일정한 두께의 점토판으로 만든다.", desc: "점토 3개를 직사각형 틀 안에 층층이 쌓은 뒤, 쨀줄을 가로로 당겨 일정한 두께의 흙판을 만듭니다.", hint: "왼쪽 점토 3개를 틀에 쌓고, 쨀줄로 3장의 흙판을 잘라내세요.", tool: "쨀줄", mode: "rub" },
+  { title: "와통에 섬유 붙이기", verb: "와통에 포목을 감아 점토판을 붙일 준비를 한다.", desc: "원통와통에 통보를 팽팽하게 씌워 점토가 나무에 달라붙지 않도록 합니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
+  { title: "와통에 흙 붙이기", verb: "점토판을 와통에 감아 붙인다.", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
+  { title: "외면 다듬기", verb: "붓으로 표면을 정리한다.", desc: "물을 묻힌 붓으로 거친 외면과 접합부를 부드럽게 정리합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
+  { title: "2분할", verb: "와도로 홈을 내, 두 장으로 나눈다.", desc: "수키와가 두 장으로 갈라지도록 와도로 양쪽에 일정한 깊이의 홈을 냅니다.", hint: "와도를 잡고 점선을 따라 위에서 아래로 그으세요.", tool: "와도", mode: "rub" },
+  { title: "와통 분리", verb: "와통을 제거한다", desc: "반건조된 점토 껍질은 그대로 두고, 안쪽의 원통와통과 통보를 위로 조심스럽게 빼냅니다.", hint: "와통 손잡이를 잡고 위쪽으로 여러 번 끌어올리세요.", tool: "와통", mode: "rub" },
+  { title: "손질 칼로 깎기", verb: "내면의 불필요한 점토와 요철을 손질 칼로 정리한다.", desc: "내면의 두꺼운 곳과 절단면을 얇게 깎아 곡률과 측면을 정돈합니다.", hint: "칼을 잡고 기와 안쪽을 골고루 훑으세요.", tool: "손질칼", mode: "rub" },
+  { title: "굽기", verb: "충분히 건조한 기와를 가마에서 환원소성하여 완성한다.", desc: "완전히 건조된 기와를 가마에서 구워 단단한 전통 기와로 완성합니다.", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },
 ];
 
 // 영상 파일을 public/videos 폴더에 넣은 뒤 해당 단계의 src를 "/videos/파일명.mp4"로 바꾸면 됩니다.
@@ -83,7 +83,7 @@ const stepVideos: { src: string | null; label: string; filename: string }[] = [
 
 const clayPieces = [
   { x: 10, y: 45, good: true, c: "#a84e32", name: "가는 점토", detail: "점성이 좋고 입자가 고와요" },
-  { x: 23, y: 41, good: false, c: "#c59a65", name: "모래 섞인 흙", detail: "거칠고 쉽게 갈라져요" },
+  { x: 23, y: 41, good: false, c: "#c59a65", name: "잔돌이 많은 흙", detail: "성형하기 어렵고 균열가능성이 있어요" },
   { x: 36, y: 47, good: true, c: "#d1ad78", name: "굵은 모래", detail: "점토의 수축과 갈라짐을 줄이는 재료예요" },
   { x: 12, y: 63, good: false, c: "#5f5843", name: "유기질 흙", detail: "불순물이 많이 섞였어요" },
   { x: 25, y: 66, good: true, c: "#b05739", name: "고운 점토", detail: "매끈하고 잘 뭉쳐져요" },
@@ -193,8 +193,25 @@ export default function Home() {
   const [active, setActive] = useState(0);
   const [done, setDone] = useState<number[]>([]);
   const [celebrate, setCelebrate] = useState(false);
+  const [remoteVideos, setRemoteVideos] = useState<Record<number, string>>({});
   const progress = Math.round(done.length / 9 * 100);
   const unlocked = Math.min(8, done.length);
+  const activeVideo = remoteVideos[active + 1] || stepVideos[active].src;
+
+  useEffect(() => {
+    const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (!projectUrl || !publishableKey) return;
+
+    fetch(`${projectUrl}/rest/v1/step_videos?select=step,video_url&order=step.asc`, {
+      headers: { apikey: publishableKey },
+    })
+      .then(response => response.ok ? response.json() : Promise.reject(new Error(`Supabase ${response.status}`)))
+      .then((rows: { step: number; video_url: string | null }[]) => {
+        setRemoteVideos(Object.fromEntries(rows.filter(row => row.video_url).map(row => [row.step, row.video_url!])))
+      })
+      .catch(error => console.warn("단계별 영상 정보를 불러오지 못했습니다.", error));
+  }, []);
 
   const finish = () => {
     setDone(d => d.includes(active) ? d : [...d, active]);
@@ -216,7 +233,7 @@ export default function Home() {
         <div className="experience-duo">
           <div className="hands-on-panel"><div className="panel-label"><span>INTERACTIVE</span><b>직접 체험</b></div><CraftGame key={active} step={active} onFinish={finish}/></div>
           <div className="step-video-panel"><div className="panel-label"><span>DOCUMENTARY</span><b>실제 제작 영상</b></div><div className="step-video-frame">
-            {stepVideos[active].src ? <video key={stepVideos[active].src} controls playsInline preload="metadata" src={stepVideos[active].src}/>
+            {activeVideo ? <video key={activeVideo} controls playsInline preload="metadata" src={activeVideo}/>
             : <div className="step-video-empty"><i>▶</i><strong>{steps[active].title}</strong><p>{stepVideos[active].label}</p><small>영상 파일 자리 · 16:9</small><code>public/videos/{stepVideos[active].filename}</code></div>}
           </div></div>
         </div>
