@@ -5,6 +5,57 @@ import { CSSProperties, PointerEvent, useEffect, useRef, useState } from "react"
 type Point = { x: number; y: number };
 type Step = { title: string; verb: string; desc: string; hint: string; tool: string; mode: "drop" | "rub" };
 
+function ParticleStory() {
+  const section = useRef<HTMLElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    let points: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
+    let alive = true;
+    const seeds = (i: number) => {
+      const a = Math.sin(i * 91.733) * 43758.5453;
+      const b = Math.sin(i * 47.113 + 2) * 24634.6345;
+      return [a - Math.floor(a), b - Math.floor(b)];
+    };
+    fetch("/Blender.obj").then(r => r.text()).then(text => {
+      points = text.split("\n").filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1,4).map(Number));
+      center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
+    });
+    const onScroll = () => {
+      if (!section.current) return;
+      const r = section.current.getBoundingClientRect();
+      progress = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
+    };
+    const draw = () => {
+      if (!alive || !canvas.current) return;
+      const c = canvas.current, ctx = c.getContext("2d")!;
+      const dpr = Math.min(devicePixelRatio, 2), w = c.clientWidth, h = c.clientHeight;
+      if (c.width !== w*dpr || c.height !== h*dpr) { c.width=w*dpr; c.height=h*dpr; }
+      ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+      const eased = progress < .08 ? 0 : 1 - Math.pow(1 - Math.min(1,(progress-.08)/.7), 3);
+      const scale = Math.min(w/460,h/270) * (.72 + eased*.24);
+      const rot = (1-eased)*.42;
+      ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
+      for(let i=0;i<points.length;i++){
+        const [vx,vy,vz]=points[i], x=vx-center[0], y=vy-center[1], z=vz-center[2], [rx,ry]=seeds(i);
+        const tx=(x*Math.cos(rot)+z*Math.sin(rot))*scale, ty=(-y+z*.12)*scale;
+        const sx=(rx-.5)*w*1.8, sy=(ry-.5)*h*1.7;
+        const px=w/2+sx*(1-eased)+tx*eased, py=h/2+sy*(1-eased)+ty*eased;
+        const size=eased>.75?1.15:.8; ctx.fillRect(px,py,size,size);
+      }
+      frame=requestAnimationFrame(draw);
+    };
+    addEventListener("scroll",onScroll,{passive:true}); addEventListener("resize",onScroll); onScroll(); draw();
+    return()=>{alive=false;cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll)};
+  },[]);
+
+  return <>
+    <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="제공된 3D 오브젝트가 입자로 형성되는 장면"/><div className="particle-copy"><span>01 · 형상의 기록</span><h2>흩어진 점들이<br/>하나의 유물이 됩니다</h2><p>7,563개의 좌표로 다시 읽는 기와의 표면</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
+  </>;
+}
+
 const steps: Step[] = [
   { title: "흙 고르기", verb: "좋은 흙을 바구니에 담아요", desc: "여러 흙이 섞여 있어요. 입자가 곱고 점성이 좋은 붉은 점토 3개를 찾아 바구니로 옮겨보세요.", hint: "붉고 매끈한 흙만 골라 바구니 안에 놓으세요.", tool: "흙", mode: "drop" },
   { title: "흙판 만들기", verb: "점토를 쌓고 쨀줄로 잘라요", desc: "바구니의 점토를 직사각형 틀 안에 층층이 쌓은 뒤, 쨀줄을 가로로 당겨 일정한 두께의 흙판을 만듭니다.", hint: "먼저 점토 5덩이를 틀에 쌓고, 쨀줄로 3장의 흙판을 잘라내세요.", tool: "쨀줄", mode: "rub" },
@@ -138,16 +189,17 @@ export default function Home() {
   const reset = () => { setActive(0); setDone([]); setCelebrate(false); };
 
   return <main>
-    <header className="topbar"><a className="brand" href="#top"><span className="brand-mark">瓦</span><span>와공방</span></a><nav><a href="#experience">제작 체험</a><a href="#learn">도구 이야기</a></nav><a className="mini-cta" href="#experience">체험 시작</a></header>
-    <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow"><span/> 손끝에서 깨어나는 옛 기술</p><h1>흙이<br/><em>기와</em>가 되는 시간</h1><p className="intro">클릭만 하는 체험이 아닙니다. 흙을 옮기고, 붓을 쓸고, 칼을 움직이며 아홉 번의 손길을 직접 완성해보세요.</p><a className="primary" href="#experience">손으로 체험 시작하기 <span>↓</span></a><div className="hero-facts"><div><b>9</b><span>드래그 미션</span></div><div><b>瓦桶</b><span>원통와통 방식</span></div><div><b>1</b><span>완성할 기와</span></div></div></div><div className="hero-art"><div className="sun"/><div className="stamp">圓筒<br/>瓦桶</div><div className="cylinder"><div className="cloth"/><div className="clay-wrap"/><div className="rim"/></div><div className="hand hand-one"/><div className="hand hand-two"/><p className="art-label">도구를 직접 움직여<br/>기와를 완성합니다</p></div></section>
+    <header className="topbar dark-nav"><a className="brand" href="#top"><span className="brand-mark">瓦</span><span>와공방</span></a><nav><a href="#film">영상</a><a href="#experience">제작 체험</a></nav><a className="mini-cta" href="#experience">체험 시작</a></header>
+    <ParticleStory />
 
-    <section className="experience" id="experience"><div className="section-heading"><div><p className="eyebrow"><span/> 손으로 배우는 아홉 단계</p><h2>기와 제작 체험</h2></div><p>도구를 잡고 작업 영역으로 움직여보세요.<br/>마우스와 터치 모두 사용할 수 있습니다.</p></div>
+    <section className="learn" id="learn"><div><p className="eyebrow light"><span/> 03 · 도구의 구조</p><h2>와통과 통보,<br/>곡률을 만드는 한 쌍</h2></div><div className="learn-card"><b>瓦桶 <small>와통</small></b><p>기와에 일정한 곡률을 주는 원통형 성형틀입니다. 같은 크기의 기와를 반복해 만들 수 있게 합니다.</p></div><div className="learn-card"><b>筒褓 <small>통보</small></b><p>와통과 점토 사이에 두르는 천입니다. 점토가 붙는 것을 막고 내면에 직물결을 남깁니다.</p></div></section>
+
+    <section className="experience" id="experience"><div className="section-heading"><div><p className="eyebrow"><span/> 04 · 손으로 배우는 아홉 단계</p><h2>기와 제작 체험</h2></div><p>도구를 잡고 작업 영역으로 움직여보세요.<br/>마우스와 터치 모두 사용할 수 있습니다.</p></div>
       <div className="progress-wrap"><div className="progress-meta"><span>나의 제작 여정</span><strong>{progress}% 완성</strong></div><div className="progress"><i style={{width:`${progress}%`}}/></div></div>
       <div className="step-strip">{steps.map((s,i)=><button key={s.title} disabled={i > unlocked} aria-label={i > unlocked ? `${s.title}, 이전 단계를 먼저 완료하세요` : s.title} className={`${active===i?"active":""} ${done.includes(i)?"done":""} ${i>unlocked?"locked":""}`} onClick={()=>{ if(i<=unlocked) setActive(i); }}><span>{done.includes(i)?"✓":i>unlocked?"🔒":String(i+1).padStart(2,"0")}</span><b>{s.title}</b></button>)}</div>
       <article className="workbench interactive"><div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div><div className="step-content"><span className="tag">{steps[active].tool} 체험</span><h3>{steps[active].verb}</h3><p>{steps[active].desc}</p><CraftGame key={active} step={active} onFinish={finish}/><aside><b>장인의 한마디</b><p>{steps[active].hint}</p></aside><div className="actions">{active>0&&<button className="back" onClick={()=>setActive(active-1)}>← 이전 단계</button>}{done.includes(active)&&active<8&&<button className="complete" onClick={()=>setActive(active+1)}>다음 단계 →</button>}</div></div></article>
     </section>
 
-    <section className="learn" id="learn"><div><p className="eyebrow light"><span/> 오늘의 도구</p><h2>와통과 통보,<br/>곡률을 만드는 한 쌍</h2></div><div className="learn-card"><b>瓦桶 <small>와통</small></b><p>기와에 일정한 곡률을 주는 원통형 성형틀입니다. 같은 크기의 기와를 반복해 만들 수 있게 합니다.</p></div><div className="learn-card"><b>筒褓 <small>통보</small></b><p>와통과 점토 사이에 두르는 천입니다. 점토가 붙는 것을 막고 내면에 직물결을 남깁니다.</p></div></section>
     <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.</p><button onClick={reset}>체험 처음부터 ↺</button></footer>
     {celebrate&&<div className="celebrate" role="dialog" aria-modal="true"><div><span>瓦</span><p>아홉 번의 손길을 모두 마쳤습니다</p><h2>나만의 기와 완성!</h2><button onClick={reset}>다시 만들어보기</button><button className="close" onClick={()=>setCelebrate(false)}>닫기</button></div></div>}
   </main>;
