@@ -11,7 +11,7 @@ function ParticleStory() {
 
   useEffect(() => {
     let points: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
-    let alive = true, yaw = 0, velocity = 0, dragging = false, lastX = 0;
+    let alive = true, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
       const b = Math.sin(i * 47.113 + 2) * 24634.6345;
@@ -28,13 +28,15 @@ function ParticleStory() {
     };
     const onPointerDown = (event: globalThis.PointerEvent) => {
       if (progress < .55 || !canvas.current) return;
-      dragging = true; velocity = 0; lastX = event.clientX;
+      dragging = true; yawVelocity = 0; pitchVelocity = 0; lastX = event.clientX; lastY = event.clientY;
       canvas.current.setPointerCapture(event.pointerId);
     };
     const onPointerMove = (event: globalThis.PointerEvent) => {
       if (!dragging) return;
-      const delta = event.clientX - lastX;
-      yaw += delta * .012; velocity = delta * .0018; lastX = event.clientX;
+      const deltaX = event.clientX - lastX, deltaY = event.clientY - lastY;
+      yaw += deltaX * .012; pitch += deltaY * .012;
+      yawVelocity = deltaX * .0018; pitchVelocity = deltaY * .0018;
+      lastX = event.clientX; lastY = event.clientY;
     };
     const onPointerUp = () => { dragging = false; };
     const draw = () => {
@@ -45,13 +47,17 @@ function ParticleStory() {
       ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
       const eased = progress < .08 ? 0 : 1 - Math.pow(1 - Math.min(1,(progress-.08)/.7), 3);
       const scale = Math.min(w/460,h/270) * (.72 + eased*.24);
-      if (eased > .82 && !dragging) { yaw += .0022 + velocity; velocity *= .94; }
+      if (eased > .82 && !dragging) {
+        yaw += .0022 + yawVelocity; pitch += pitchVelocity;
+        yawVelocity *= .94; pitchVelocity *= .94;
+      }
       const rot = (1-eased)*.42 + yaw*eased;
       ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
       for(let i=0;i<points.length;i++){
         const [vx,vy,vz]=points[i], x=vx-center[0], y=vy-center[1], z=vz-center[2], [rx,ry]=seeds(i);
         const xr=x*Math.cos(rot)+z*Math.sin(rot), zr=-x*Math.sin(rot)+z*Math.cos(rot);
-        const tx=xr*scale, ty=(-y+zr*.12)*scale;
+        const yr=y*Math.cos(pitch)-zr*Math.sin(pitch), depth=y*Math.sin(pitch)+zr*Math.cos(pitch);
+        const tx=xr*scale, ty=(-yr+depth*.12)*scale;
         const sx=(rx-.5)*w*1.8, sy=(ry-.5)*h*1.7;
         const px=w/2+sx*(1-eased)+tx*eased, py=h/2+sy*(1-eased)+ty*eased;
         const size=eased>.75?1.15:.8; ctx.fillRect(px,py,size,size);
@@ -68,7 +74,7 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="제공된 3D 오브젝트가 입자로 형성되고 좌우 드래그로 360도 회전하는 장면"/><div className="particle-copy"><span>01 · 형상의 기록</span><h2>흩어진 점들이<br/>하나의 유물이 됩니다</h2><p>7,563개의 좌표로 다시 읽는 기와의 표면 · 좌우로 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="제공된 3D 오브젝트가 입자로 형성되고 모든 방향 드래그로 자유 회전하는 장면"/><div className="particle-copy"><span>01 · 형상의 기록</span><h2>흩어진 점들이<br/>하나의 유물이 됩니다</h2><p>7,563개의 좌표로 다시 읽는 기와의 표면 · 상하좌우로 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
