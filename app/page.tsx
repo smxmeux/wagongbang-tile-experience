@@ -12,15 +12,18 @@ const steps: Step[] = [
   { title: "흙판 붙이기", verb: "흙판을 와통에 붙여요", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
   { title: "외면 다듬기", verb: "붓으로 표면을 펴요", desc: "물을 묻힌 붓으로 거친 외면과 접합부를 부드럽게 정리합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
   { title: "2분할 홈 내기", verb: "와도로 곧은 홈을 내요", desc: "수키와가 두 장으로 갈라지도록 와도로 양쪽에 일정한 깊이의 홈을 냅니다.", hint: "와도를 잡고 점선을 따라 위에서 아래로 그으세요.", tool: "와도", mode: "rub" },
-  { title: "와통에서 분리", verb: "와통을 천천히 빼내요", desc: "반건조된 점토가 무너지지 않도록 안쪽의 원통와통을 조심스럽게 분리합니다.", hint: "나무 손잡이를 잡고 오른쪽으로 여러 번 당기세요.", tool: "와통", mode: "rub" },
+  { title: "와통에서 분리", verb: "와통을 위로 빼내요", desc: "반건조된 점토 껍질은 그대로 두고, 안쪽의 원통와통과 통보를 위로 조심스럽게 빼냅니다.", hint: "와통 손잡이를 잡고 위쪽으로 여러 번 끌어올리세요.", tool: "와통", mode: "rub" },
   { title: "내면 깎기", verb: "칼로 두께를 고르게 해요", desc: "내면의 두꺼운 곳과 절단면을 얇게 깎아 곡률과 측면을 정돈합니다.", hint: "칼을 잡고 기와 안쪽을 골고루 훑으세요.", tool: "손질칼", mode: "rub" },
   { title: "가마에서 굽기", verb: "불씨를 살려 기와를 구워요", desc: "완전히 건조된 기와를 가마에서 구워 단단한 전통 기와로 완성합니다.", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },
 ];
 
 const clayPieces = [
-  { x: 12, y: 23, good: true, c: "#a84e32" }, { x: 27, y: 61, good: false, c: "#c59a65" },
-  { x: 42, y: 25, good: true, c: "#964129" }, { x: 56, y: 65, good: false, c: "#5f5843" },
-  { x: 70, y: 28, good: true, c: "#b05739" }, { x: 82, y: 64, good: false, c: "#b78d5d" },
+  { x: 10, y: 35, good: true, c: "#a84e32", name: "가는 점토", detail: "점성이 좋고 입자가 고와요" },
+  { x: 23, y: 31, good: false, c: "#c59a65", name: "모래 섞인 흙", detail: "거칠고 쉽게 갈라져요" },
+  { x: 36, y: 37, good: true, c: "#964129", name: "붉은 점토", detail: "성형하기 좋은 점토예요" },
+  { x: 12, y: 63, good: false, c: "#5f5843", name: "유기질 흙", detail: "불순물이 많이 섞였어요" },
+  { x: 25, y: 66, good: true, c: "#b05739", name: "고운 점토", detail: "매끈하고 잘 뭉쳐져요" },
+  { x: 38, y: 62, good: false, c: "#b78d5d", name: "자갈 섞인 흙", detail: "큰 알갱이가 보여요" },
 ];
 
 function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
@@ -65,7 +68,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
           setCovered(old => Array.from(new Set([...old, ...cells])));
         }
       } else {
-        setRub(v => Math.min(100, v + 2.8));
+        if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + 2.8));
         setMarks(m => [...m.slice(-42), p]);
       }
     }
@@ -88,21 +91,25 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   return <div className={`craft-game game-${step} ${finished ? "game-finished" : ""}`} ref={box} onPointerMove={move} onPointerUp={end} onPointerCancel={end}>
     <div className="game-head"><span>{finished ? "✓ 체험 성공" : "마우스·손가락으로 직접 움직여보세요"}</span><b>{step === 0 ? `${caught.length}/3` : `${step === 4 ? brushPercent : Math.round(rub)}%`}</b></div>
     {step === 0 ? <>
-      <div className="earth-pile" />
-      {clayPieces.map((p, i) => !caught.includes(i) && <button key={i} aria-label={`${p.good ? "가는 점토" : "거친 흙"} 조각`} className={`clay-piece ${wrong === i ? "wrong" : ""}`} style={{ left: `${drag === i ? pos.x : p.x}%`, top: `${drag === i ? pos.y : p.y}%`, background: p.c }} onPointerDown={e => start(e, i)} />)}
+      <div className="clay-group-label">여러 흙이 섞여 있어요</div>
+      {clayPieces.map((p, i) => !caught.includes(i) && <button key={i} aria-label={`${p.name}: ${p.detail}`} data-name={p.name} data-detail={p.detail} className={`clay-piece ${wrong === i ? "wrong" : ""}`} style={{ left: `${drag === i ? pos.x : p.x}%`, top: `${drag === i ? pos.y : p.y}%`, background: p.c }} onPointerDown={e => start(e, i)} />)}
       <div className={`basket ${drag !== null ? "ready" : ""}`}><i/><span>좋은 흙 바구니</span><small>{caught.length ? "●".repeat(caught.length) : "여기에 놓기"}</small></div>
     </> : <>
-      <div className="work-target">
-        <div className="target-cylinder"><i className="target-cloth"/><i className="target-clay" style={{ opacity: step >= 3 ? 1 : .28 }}/></div>
+      <div className={`work-target scene-${step}`}>
+        {step === 1 ? <div className="rolling-board"><div className="slab" style={{ transform: `scaleY(${.34 + rub / 145})`, borderRadius: `${45-rub/3}%` }}/><i className="mold-guide">와통 높이</i></div>
+        : step === 6 ? <div className="release-scene"><div className="tile-shell"/><div className="mold-pull" style={{ transform: `translateY(${-rub * 1.35}px)` }}><i/></div></div>
+        : step === 7 ? <div className="inner-tile"><span>기와 안쪽 · 내면</span>{marks.map((_,i)=><i key={i} className="inner-groove" style={{left:`${18+(i%7)*10}%`,top:`${22+(Math.floor(i/7)%6)*10}%`,transform:`rotate(${-12+(i%4)*7}deg)`}}/>)}</div>
+        : step === 8 ? <div className="kiln"><div className="fired-tile"/><div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div></div>
+        : <div className="target-cylinder bare-mold">
+            {(step > 2 || (step === 2 && finished)) && <i className="target-cloth"/>}
+            {(step > 3 || (step === 3 && finished)) && <i className="target-clay"/>}
+          </div>}
         {step === 4 && <div className="brush-coverage" aria-hidden="true">{Array.from({ length: 49 }, (_, i) => {
           const col = i % 7, row = Math.floor(i / 7), painted = covered.includes(`${col}-${row}`);
           return <i key={i} className={painted ? "painted" : ""} />;
         })}</div>}
-        {marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 55 }}/>) }
-        {step === 1 && <div className="slab" style={{ transform: `scaleX(${.45 + rub / 180})` }}/>} 
+        {step !== 7 && marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 55 }}/>) }
         {step === 5 && <div className="cut-line" style={{ height: `${rub}%` }}/>} 
-        {step === 6 && <div className="mold-pull" style={{ transform: `translateX(${rub * .55}px)` }}/>} 
-        {step === 8 && <div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div>}
       </div>
       <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>
     </>}
