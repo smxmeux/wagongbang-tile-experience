@@ -57,7 +57,7 @@ function ParticleStory() {
 }
 
 const steps: Step[] = [
-  { title: "흙 고르기", verb: "좋은 흙을 바구니에 담아요", desc: "여러 흙이 섞여 있어요. 입자가 곱고 점성이 좋은 붉은 점토 3개를 찾아 바구니로 옮겨보세요.", hint: "붉고 매끈한 흙만 골라 바구니 안에 놓으세요.", tool: "흙", mode: "drop" },
+  { title: "흙 고르기", verb: "알맞은 재료를 바구니에 담아요", desc: "여러 흙과 모래가 섞여 있어요. 기와 제작에 사용할 가는 점토, 고운 점토, 굵은 모래를 찾아 바구니로 옮겨보세요.", hint: "가는 점토·고운 점토·굵은 모래, 세 가지 재료를 고르세요.", tool: "흙", mode: "drop" },
   { title: "흙판 만들기", verb: "점토를 쌓고 쨀줄로 잘라요", desc: "점토 3개를 직사각형 틀 안에 층층이 쌓은 뒤, 쨀줄을 가로로 당겨 일정한 두께의 흙판을 만듭니다.", hint: "왼쪽 점토 3개를 틀에 쌓고, 쨀줄로 3장의 흙판을 잘라내세요.", tool: "쨀줄", mode: "rub" },
   { title: "통보 씌우기", verb: "천을 와통에 감아요", desc: "원통와통에 통보를 팽팽하게 씌워 점토가 나무에 달라붙지 않도록 합니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
   { title: "흙판 붙이기", verb: "흙판을 와통에 붙여요", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
@@ -84,10 +84,10 @@ const stepVideos: { src: string | null; label: string; filename: string }[] = [
 const clayPieces = [
   { x: 10, y: 45, good: true, c: "#a84e32", name: "가는 점토", detail: "점성이 좋고 입자가 고와요" },
   { x: 23, y: 41, good: false, c: "#c59a65", name: "모래 섞인 흙", detail: "거칠고 쉽게 갈라져요" },
-  { x: 36, y: 47, good: true, c: "#964129", name: "붉은 점토", detail: "성형하기 좋은 점토예요" },
+  { x: 36, y: 47, good: true, c: "#d1ad78", name: "굵은 모래", detail: "점토의 수축과 갈라짐을 줄이는 재료예요" },
   { x: 12, y: 63, good: false, c: "#5f5843", name: "유기질 흙", detail: "불순물이 많이 섞였어요" },
   { x: 25, y: 66, good: true, c: "#b05739", name: "고운 점토", detail: "매끈하고 잘 뭉쳐져요" },
-  { x: 38, y: 62, good: false, c: "#b78d5d", name: "자갈 섞인 흙", detail: "큰 알갱이가 보여요" },
+  { x: 38, y: 62, good: false, c: "#777062", name: "자갈 섞인 흙", detail: "큰 돌 알갱이가 있어 성형에 방해돼요" },
 ];
 
 function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
