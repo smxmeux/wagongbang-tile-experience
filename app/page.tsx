@@ -100,7 +100,7 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="왼쪽 점군과 오른쪽 폴리곤으로 비교하며 모든 방향으로 회전하는 3D 오브젝트"/><div className="mesh-split" style={{left:`${split}%`}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);moveSplit(e)}} onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))moveSplit(e)}}><i/><span>POINT</span><b>POLYGON</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 면으로<br/>형상을 비교합니다</h2><p>막대를 좌우로 밀어 점군과 폴리곤을 비교 · 빈 화면을 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="왼쪽 점군과 오른쪽 폴리곤으로 비교하며 모든 방향으로 회전하는 3D 오브젝트"/><div className="mesh-split" style={{left:`${split}%`}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);moveSplit(e)}} onPointerMove={e=>{if(e.buttons===1)moveSplit(e)}}><i/><span>POINT</span><b>POLYGON</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 면으로<br/>형상을 비교합니다</h2><p>막대를 좌우로 밀어 점군과 폴리곤을 비교 · 빈 화면을 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
