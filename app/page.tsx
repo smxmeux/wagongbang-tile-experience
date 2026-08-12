@@ -10,10 +10,11 @@ function ParticleStory() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const splitRef = useRef(.5);
   const [split, setSplit] = useState(50);
+  const [meshReady, setMeshReady] = useState(false);
 
   useEffect(() => {
     let points: number[][] = [], faces: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
-    let alive = true, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
+    let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
       const b = Math.sin(i * 47.113 + 2) * 24634.6345;
@@ -29,6 +30,7 @@ function ParticleStory() {
       if (!section.current) return;
       const r = section.current.getBoundingClientRect();
       progress = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
+      comparisonEnabled = progress >= .78; setMeshReady(comparisonEnabled);
     };
     const onPointerDown = (event: globalThis.PointerEvent) => {
       if (progress < .55 || !canvas.current) return;
@@ -66,17 +68,20 @@ function ParticleStory() {
         const px=w/2+sx*(1-eased)+tx*eased, py=h/2+sy*(1-eased)+ty*eased;
         projected[i] = {x:px,y:py};
       }
-      const dividerX = w * splitRef.current;
-      ctx.save(); ctx.beginPath(); ctx.rect(dividerX,0,w-dividerX,h); ctx.clip();
-      ctx.beginPath();
-      for (const face of faces) {
-        if (face.length < 3) continue;
-        const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
-        if (!a || !b || !d) continue;
-        ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.closePath();
+      const comparisonReady = comparisonEnabled;
+      const dividerX = comparisonReady ? w * splitRef.current : w;
+      if (comparisonReady) {
+        ctx.save(); ctx.beginPath(); ctx.rect(dividerX,0,w-dividerX,h); ctx.clip();
+        ctx.beginPath();
+        for (const face of faces) {
+          if (face.length < 3) continue;
+          const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
+          if (!a || !b || !d) continue;
+          ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.closePath();
+        }
+        ctx.fillStyle="rgba(178,184,181,.58)"; ctx.fill();
+        ctx.strokeStyle="rgba(242,244,240,.18)"; ctx.lineWidth=.45; ctx.stroke(); ctx.restore();
       }
-      ctx.fillStyle=`rgba(178,184,181,${Math.max(.08,eased*.58)})`; ctx.fill();
-      ctx.strokeStyle=`rgba(242,244,240,${Math.max(.04,eased*.18)})`; ctx.lineWidth=.45; ctx.stroke(); ctx.restore();
       ctx.save(); ctx.beginPath(); ctx.rect(0,0,dividerX,h); ctx.clip();
       ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
       const size=eased>.75?1.15:.8;
@@ -94,7 +99,7 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="왼쪽 점군과 오른쪽 폴리곤으로 비교하며 모든 방향으로 회전하는 3D 오브젝트"/><input className="mesh-range" type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 폴리곤 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className="mesh-split" style={{left:`${split}%`}}><i/><span>POINT</span><b>POLYGON</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 면으로<br/>형상을 비교합니다</h2><p>막대를 좌우로 밀어 점군과 폴리곤을 비교 · 빈 화면을 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 폴리곤으로 비교하는 3D 오브젝트"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 폴리곤 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>POLYGON</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 면으로<br/>형상을 비교합니다</h2><p>점들이 모두 모이면 막대를 움직여 점군과 폴리곤을 비교할 수 있습니다</p></div><div className="scroll-meter"><i/></div></div></section>
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
