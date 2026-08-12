@@ -11,7 +11,7 @@ function ParticleStory() {
 
   useEffect(() => {
     let points: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
-    let alive = true;
+    let alive = true, yaw = 0, velocity = 0, dragging = false, lastX = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
       const b = Math.sin(i * 47.113 + 2) * 24634.6345;
@@ -26,6 +26,17 @@ function ParticleStory() {
       const r = section.current.getBoundingClientRect();
       progress = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
     };
+    const onPointerDown = (event: globalThis.PointerEvent) => {
+      if (progress < .55 || !canvas.current) return;
+      dragging = true; velocity = 0; lastX = event.clientX;
+      canvas.current.setPointerCapture(event.pointerId);
+    };
+    const onPointerMove = (event: globalThis.PointerEvent) => {
+      if (!dragging) return;
+      const delta = event.clientX - lastX;
+      yaw += delta * .012; velocity = delta * .0018; lastX = event.clientX;
+    };
+    const onPointerUp = () => { dragging = false; };
     const draw = () => {
       if (!alive || !canvas.current) return;
       const c = canvas.current, ctx = c.getContext("2d")!;
@@ -34,24 +45,30 @@ function ParticleStory() {
       ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
       const eased = progress < .08 ? 0 : 1 - Math.pow(1 - Math.min(1,(progress-.08)/.7), 3);
       const scale = Math.min(w/460,h/270) * (.72 + eased*.24);
-      const rot = (1-eased)*.42;
+      if (eased > .82 && !dragging) { yaw += .0022 + velocity; velocity *= .94; }
+      const rot = (1-eased)*.42 + yaw*eased;
       ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
       for(let i=0;i<points.length;i++){
         const [vx,vy,vz]=points[i], x=vx-center[0], y=vy-center[1], z=vz-center[2], [rx,ry]=seeds(i);
-        const tx=(x*Math.cos(rot)+z*Math.sin(rot))*scale, ty=(-y+z*.12)*scale;
+        const xr=x*Math.cos(rot)+z*Math.sin(rot), zr=-x*Math.sin(rot)+z*Math.cos(rot);
+        const tx=xr*scale, ty=(-y+zr*.12)*scale;
         const sx=(rx-.5)*w*1.8, sy=(ry-.5)*h*1.7;
         const px=w/2+sx*(1-eased)+tx*eased, py=h/2+sy*(1-eased)+ty*eased;
         const size=eased>.75?1.15:.8; ctx.fillRect(px,py,size,size);
       }
       frame=requestAnimationFrame(draw);
     };
-    addEventListener("scroll",onScroll,{passive:true}); addEventListener("resize",onScroll); onScroll(); draw();
-    return()=>{alive=false;cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll)};
+    const target = canvas.current;
+    addEventListener("scroll",onScroll,{passive:true}); addEventListener("resize",onScroll);
+    target?.addEventListener("pointerdown",onPointerDown); target?.addEventListener("pointermove",onPointerMove);
+    target?.addEventListener("pointerup",onPointerUp); target?.addEventListener("pointercancel",onPointerUp);
+    onScroll(); draw();
+    return()=>{alive=false;cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
   },[]);
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="제공된 3D 오브젝트가 입자로 형성되는 장면"/><div className="particle-copy"><span>01 · 형상의 기록</span><h2>흩어진 점들이<br/>하나의 유물이 됩니다</h2><p>7,563개의 좌표로 다시 읽는 기와의 표면</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="제공된 3D 오브젝트가 입자로 형성되고 좌우 드래그로 360도 회전하는 장면"/><div className="particle-copy"><span>01 · 형상의 기록</span><h2>흩어진 점들이<br/>하나의 유물이 됩니다</h2><p>7,563개의 좌표로 다시 읽는 기와의 표면 · 좌우로 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
