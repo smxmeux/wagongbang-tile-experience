@@ -8,9 +8,17 @@ type Step = { title: string; verb: string; desc: string; hint: string; tool: str
 function ParticleStory() {
   const section = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const splitRef = useRef(.5);
+  const [split, setSplit] = useState(50);
+
+  const moveSplit = (event: PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.parentElement!.getBoundingClientRect();
+    const value = Math.max(8, Math.min(92, ((event.clientX - rect.left) / rect.width) * 100));
+    splitRef.current = value / 100; setSplit(value);
+  };
 
   useEffect(() => {
-    let points: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
+    let points: number[][] = [], faces: number[][] = [], frame = 0, progress = 0, center = [0,0,0];
     let alive = true, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
@@ -18,7 +26,9 @@ function ParticleStory() {
       return [a - Math.floor(a), b - Math.floor(b)];
     };
     fetch("/Blender.obj").then(r => r.text()).then(text => {
-      points = text.split("\n").filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1,4).map(Number));
+      const lines = text.split("\n");
+      points = lines.filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1,4).map(Number));
+      faces = lines.filter(l => l.startsWith("f ")).map(l => l.trim().split(/\s+/).slice(1).map(v => Number(v.split("/")[0]) - 1));
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
     });
     const onScroll = () => {
@@ -52,7 +62,7 @@ function ParticleStory() {
         yawVelocity *= .94; pitchVelocity *= .94;
       }
       const rot = (1-eased)*.42 + yaw*eased;
-      ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
+      const projected: Point[] = new Array(points.length);
       for(let i=0;i<points.length;i++){
         const [vx,vy,vz]=points[i], x=vx-center[0], y=vy-center[1], z=vz-center[2], [rx,ry]=seeds(i);
         const xr=x*Math.cos(rot)+z*Math.sin(rot), zr=-x*Math.sin(rot)+z*Math.cos(rot);
@@ -60,8 +70,24 @@ function ParticleStory() {
         const tx=xr*scale, ty=(-yr+depth*.12)*scale;
         const sx=(rx-.5)*w*1.8, sy=(ry-.5)*h*1.7;
         const px=w/2+sx*(1-eased)+tx*eased, py=h/2+sy*(1-eased)+ty*eased;
-        const size=eased>.75?1.15:.8; ctx.fillRect(px,py,size,size);
+        projected[i] = {x:px,y:py};
       }
+      const dividerX = w * splitRef.current;
+      ctx.save(); ctx.beginPath(); ctx.rect(dividerX,0,w-dividerX,h); ctx.clip();
+      ctx.beginPath();
+      for (const face of faces) {
+        if (face.length < 3) continue;
+        const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
+        if (!a || !b || !d) continue;
+        ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.closePath();
+      }
+      ctx.fillStyle=`rgba(178,184,181,${Math.max(.08,eased*.58)})`; ctx.fill();
+      ctx.strokeStyle=`rgba(242,244,240,${Math.max(.04,eased*.18)})`; ctx.lineWidth=.45; ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(0,0,dividerX,h); ctx.clip();
+      ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
+      const size=eased>.75?1.15:.8;
+      for (const point of projected) if(point) ctx.fillRect(point.x,point.y,size,size);
+      ctx.restore();
       frame=requestAnimationFrame(draw);
     };
     const target = canvas.current;
@@ -74,7 +100,7 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="제공된 3D 오브젝트가 입자로 형성되고 모든 방향 드래그로 자유 회전하는 장면"/><div className="particle-copy"><span>01 · 형상의 기록</span><h2>흩어진 점들이<br/>하나의 유물이 됩니다</h2><p>7,563개의 좌표로 다시 읽는 기와의 표면 · 상하좌우로 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="왼쪽 점군과 오른쪽 폴리곤으로 비교하며 모든 방향으로 회전하는 3D 오브젝트"/><div className="mesh-split" style={{left:`${split}%`}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);moveSplit(e)}} onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))moveSplit(e)}}><i/><span>POINT</span><b>POLYGON</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 면으로<br/>형상을 비교합니다</h2><p>막대를 좌우로 밀어 점군과 폴리곤을 비교 · 빈 화면을 드래그해 회전</p></div><div className="scroll-meter"><i/></div></div></section>
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
