@@ -1,6 +1,6 @@
 "use client";
 
-import { PointerEvent, useEffect, useRef, useState } from "react";
+import { CSSProperties, PointerEvent, useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
 type Step = { title: string; verb: string; desc: string; hint: string; tool: string; mode: "drop" | "rub" };
@@ -68,8 +68,8 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
           setCovered(old => Array.from(new Set([...old, ...cells])));
         }
       } else {
-        if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + 2.8));
-        setMarks(m => [...m.slice(-42), p]);
+        if (step !== 6 || p.y < pos.y) setRub(v => Math.min(100, v + 1.05));
+        if (step !== 6) setMarks(m => [...m.slice(-78), p]);
       }
     }
   };
@@ -98,7 +98,7 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
       <div className={`work-target scene-${step}`}>
         {step === 1 ? <div className="rolling-board"><div className="slab" style={{ transform: `scaleY(${.34 + rub / 145})`, borderRadius: `${45-rub/3}%` }}/><i className="mold-guide">와통 높이</i></div>
         : step === 6 ? <div className="release-scene"><div className="tile-shell"/><div className="mold-pull" style={{ transform: `translateY(${-rub * 1.35}px)` }}><i/></div></div>
-        : step === 7 ? <div className="inner-tile"><span>기와 안쪽 · 내면</span>{marks.map((_,i)=><i key={i} className="inner-groove" style={{left:`${18+(i%7)*10}%`,top:`${22+(Math.floor(i/7)%6)*10}%`,transform:`rotate(${-12+(i%4)*7}deg)`}}/>)}</div>
+        : step === 7 ? <div className="inner-tile"><span>기와 안쪽 · 내면</span>{marks.map((_,i)=><i key={i} className="inner-groove" style={{left:`${20+(i%8)*8}%`,top:`${18+(Math.floor(i/8)%6)*12}%`,transform:`rotate(${-4+(i%3)*4}deg)`}}/>)}</div>
         : step === 8 ? <div className="kiln"><div className="fired-tile"/><div className="fire" style={{ filter: `saturate(${1 + rub / 35})`, transform: `scale(${.7 + rub / 280})` }}>♨</div></div>
         : <div className="target-cylinder bare-mold">
             {(step > 2 || (step === 2 && finished)) && <i className="target-cloth"/>}
@@ -108,8 +108,8 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
           const col = i % 7, row = Math.floor(i / 7), painted = covered.includes(`${col}-${row}`);
           return <i key={i} className={painted ? "painted" : ""} />;
         })}</div>}
-        {step !== 7 && marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 55 }}/>) }
-        {step === 5 && <div className="cut-line" style={{ height: `${rub}%` }}/>} 
+        {step !== 7 && step !== 6 && marks.map((m, i) => <i key={i} className="work-mark" style={{ left: `${m.x}%`, top: `${m.y}%`, opacity: .15 + i / 90 }}/>) }
+        {step === 5 && <div className="split-tile" style={{ "--split": `${rub / 18}px` } as CSSProperties}><i className="split-left"/><i className="split-right"/><b className="cut-line" style={{ height: `${rub}%` }}/></div>} 
       </div>
       <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>
     </>}
