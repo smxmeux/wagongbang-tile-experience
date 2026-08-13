@@ -13,19 +13,29 @@ function ParticleStory() {
   const [meshReady, setMeshReady] = useState(false);
 
   useEffect(() => {
-    let points: number[][] = [], faces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
+    let points: number[][] = [], texcoords: number[][] = [], faces: {v:number[];t:number[]}[] = [], faceColors: string[] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
       const b = Math.sin(i * 47.113 + 2) * 24634.6345;
       return [a - Math.floor(a), b - Math.floor(b)];
     };
-    fetch("/Blender.obj").then(r => r.text()).then(text => {
+    fetch("/tile-model/tile.obj").then(r => r.text()).then(text => {
       const lines = text.split("\n");
       points = lines.filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1,4).map(Number));
-      faces = lines.filter(l => l.startsWith("f ")).map(l => l.trim().split(/\s+/).slice(1).map(v => Number(v.split("/")[0]) - 1));
+      texcoords = lines.filter(l => l.startsWith("vt ")).map(l => l.trim().split(/\s+/).slice(1,3).map(Number));
+      faces = lines.filter(l => l.startsWith("f ")).map(l => {const refs=l.trim().split(/\s+/).slice(1).map(x=>x.split("/").map(Number));return {v:refs.map(x=>x[0]-1),t:refs.map(x=>x[1]-1)}});
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
+      if (texture.complete) texture.onload?.(new Event("load"));
     });
+    const texture = new Image();
+    texture.src = "/tile-model/tile-texture.jpg";
+    texture.onload = () => {
+      const sample=document.createElement("canvas"), size=512; sample.width=size; sample.height=size;
+      const sampleCtx=sample.getContext("2d",{willReadFrequently:true})!; sampleCtx.drawImage(texture,0,0,size,size);
+      const pixels=sampleCtx.getImageData(0,0,size,size).data;
+      faceColors=faces.map(face=>{const uv=face.t.map(i=>texcoords[i]).filter(Boolean);if(!uv.length)return "rgb(150,145,138)";const u=uv.reduce((s,p)=>s+p[0],0)/uv.length,v=uv.reduce((s,p)=>s+p[1],0)/uv.length,x=Math.max(0,Math.min(size-1,Math.floor(u*(size-1)))),y=Math.max(0,Math.min(size-1,Math.floor((1-v)*(size-1)))),j=(y*size+x)*4;return `rgb(${pixels[j]},${pixels[j+1]},${pixels[j+2]})`});
+    };
     const onScroll = () => {
       if (!section.current) return;
       const r = section.current.getBoundingClientRect();
@@ -75,14 +85,13 @@ function ParticleStory() {
       if (comparisonReady) {
         ctx.save(); ctx.beginPath(); ctx.rect(dividerX,0,w-dividerX,h); ctx.clip();
         ctx.beginPath();
-        for (const face of faces) {
-          if (face.length < 3) continue;
-          const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
+        for (let faceIndex=0;faceIndex<faces.length;faceIndex++) {
+          const face=faces[faceIndex]; if (face.v.length < 3) continue;
+          const a=projected[face.v[0]], b=projected[face.v[1]], d=projected[face.v[2]];
           if (!a || !b || !d) continue;
           if ((b.x-a.x)*(d.y-a.y)-(b.y-a.y)*(d.x-a.x) > 0) continue;
-          ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.closePath();
+          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fillStyle=faceColors[faceIndex]||"rgb(150,145,138)";ctx.fill();
         }
-        ctx.fillStyle="rgba(178,184,181,.58)"; ctx.fill();
         ctx.restore();
       }
       ctx.save(); ctx.beginPath(); ctx.rect(0,0,dividerX,h); ctx.clip();
@@ -102,7 +111,7 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 폴리곤으로 비교하는 3D 오브젝트"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 폴리곤 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>POLYGON</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 면으로<br/>형상을 비교합니다</h2><p>점들이 모두 모이면 막대를 움직여 점군과 폴리곤을 비교할 수 있습니다</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 텍스처로 비교하는 3D 기와"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 텍스처 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다</p></div><div className="scroll-meter"><i/></div></div></section>
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
