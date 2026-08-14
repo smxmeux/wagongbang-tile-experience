@@ -30,7 +30,7 @@ function ParticleStory() {
   },[activeTrace]);
 
   useEffect(() => {
-    let points: number[][] = [], vertexColors: number[][] = [], faces: number[][] = [], faceColors: string[] = [], landmarkPoints: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
+    let points: number[][] = [], vertexColors: number[][] = [], faces: number[][] = [], faceColors: string[] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
@@ -46,7 +46,16 @@ function ParticleStory() {
       faceColors=faces.map(face=>{const colors=face.map(i=>vertexColors[i]);const rgb=[0,1,2].map(channel=>Math.round(colors.reduce((sum,color)=>sum+(color?.[channel]||145),0)/colors.length));return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`});
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
       const mins=[0,1,2].map(axis=>Math.min(...points.map(p=>p[axis]))), maxs=[0,1,2].map(axis=>Math.max(...points.map(p=>p[axis])));
-      landmarkPoints=tileTraces.map(trace=>trace.anchor.map((ratio,axis)=>mins[axis]+(maxs[axis]-mins[axis])*ratio));
+      landmarkFaces=tileTraces.map(trace=>{
+        const target=trace.anchor.map((ratio,axis)=>mins[axis]+(maxs[axis]-mins[axis])*ratio);
+        let nearest=faces[0], nearestDistance=Infinity;
+        for(const face of faces){
+          const centroid=[0,1,2].map(axis=>face.reduce((sum,index)=>sum+points[index][axis],0)/face.length);
+          const distance=centroid.reduce((sum,value,axis)=>sum+(value-target[axis])**2,0);
+          if(distance<nearestDistance){nearestDistance=distance;nearest=face;}
+        }
+        return nearest;
+      });
     });
     const onScroll = () => {
       if (!section.current) return;
@@ -111,15 +120,15 @@ function ParticleStory() {
       const size=eased>.75?1.15:.8;
       for (const point of projected) if(point) ctx.fillRect(point.x,point.y,size,size);
       ctx.restore();
-      for(let markerIndex=0;markerIndex<landmarkPoints.length;markerIndex++){
-        const marker=markerRefs.current[markerIndex], point=landmarkPoints[markerIndex];
-        if(!marker || !point) continue;
-        const x=point[0]-center[0], y=point[1]-center[1], z=point[2]-center[2];
-        const xr=x*Math.cos(rot)+z*Math.sin(rot), zr=-x*Math.sin(rot)+z*Math.cos(rot);
-        const yr=y*Math.cos(pitch)-zr*Math.sin(pitch), depth=y*Math.sin(pitch)+zr*Math.cos(pitch);
-        const px=w/2+xr*scale, py=h/2+(-yr+depth*.12)*scale;
+      for(let markerIndex=0;markerIndex<landmarkFaces.length;markerIndex++){
+        const marker=markerRefs.current[markerIndex], face=landmarkFaces[markerIndex];
+        if(!marker || !face) continue;
+        const surface=face.map(index=>projected[index]).filter(Boolean);
+        if(surface.length<3) continue;
+        const px=surface.reduce((sum,point)=>sum+point.x,0)/surface.length, py=surface.reduce((sum,point)=>sum+point.y,0)/surface.length;
+        const [a,b,d]=surface, isFrontFacing=(b.x-a.x)*(d.y-a.y)-(b.y-a.y)*(d.x-a.x)<=0;
         marker.style.transform=`translate3d(${px}px,${py}px,0)`;
-        const isOnTexture=comparisonReady && px>dividerX+18 && px<w-30 && py>30 && py<h-30;
+        const isOnTexture=comparisonReady && isFrontFacing && px>dividerX+18 && px<w-30 && py>30 && py<h-30;
         marker.style.opacity=isOnTexture ? "1" : "0";
         marker.style.pointerEvents=isOnTexture ? "auto" : "none";
       }
