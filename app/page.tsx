@@ -34,7 +34,8 @@ function ParticleStory() {
     let points: number[][] = [], faces: number[][] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     let gl: WebGLRenderingContext | null = null, glProgram: WebGLProgram | null = null, glIndexCount = 0, textureBitmap: ImageBitmap | null = null;
-    let glUniforms: { center: WebGLUniformLocation | null; viewport: WebGLUniformLocation | null; scale: WebGLUniformLocation | null; yaw: WebGLUniformLocation | null; pitch: WebGLUniformLocation | null } | null = null;
+    let glUniforms: { center: WebGLUniformLocation | null; modelMin: WebGLUniformLocation | null; modelRange: WebGLUniformLocation | null; viewport: WebGLUniformLocation | null; scale: WebGLUniformLocation | null; yaw: WebGLUniformLocation | null; pitch: WebGLUniformLocation | null } | null = null;
+    let glModelMin=[0,0,0],glModelRange=[1,1,1];
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
       const b = Math.sin(i * 47.113 + 2) * 24634.6345;
@@ -65,15 +66,17 @@ function ParticleStory() {
       if(!alive)return;
       textureBitmap=await createImageBitmap(imageBlob);
       gl=target.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});if(!gl)return;
-      const vertexShader=compileShader(gl,gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec2 aUv;uniform vec3 uCenter;uniform vec2 uViewport;uniform float uScale;uniform float uYaw;uniform float uPitch;varying vec2 vUv;void main(){vec3 p=aPosition-uCenter;float cy=cos(uYaw),sy=sin(uYaw);float xr=p.x*cy+p.z*sy;float zr=-p.x*sy+p.z*cy;float cp=cos(uPitch),sp=sin(uPitch);float yr=p.y*cp-zr*sp;float depth=p.y*sp+zr*cp;gl_Position=vec4(2.0*xr*uScale/uViewport.x,2.0*(yr-depth*.12)*uScale/uViewport.y,-depth/420.0,1.0);vUv=aUv;}`);
+      const vertexShader=compileShader(gl,gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec2 aUv;uniform vec3 uCenter;uniform vec3 uModelMin;uniform vec3 uModelRange;uniform vec2 uViewport;uniform float uScale;uniform float uYaw;uniform float uPitch;varying vec2 vUv;void main(){vec3 p=(uModelMin+aPosition*uModelRange)-uCenter;float cy=cos(uYaw),sy=sin(uYaw);float xr=p.x*cy+p.z*sy;float zr=-p.x*sy+p.z*cy;float cp=cos(uPitch),sp=sin(uPitch);float yr=p.y*cp-zr*sp;float depth=p.y*sp+zr*cp;gl_Position=vec4(2.0*xr*uScale/uViewport.x,2.0*(yr-depth*.12)*uScale/uViewport.y,-depth/420.0,1.0);vUv=aUv;}`);
       const fragmentShader=compileShader(gl,gl.FRAGMENT_SHADER,`precision mediump float;uniform sampler2D uTexture;varying vec2 vUv;void main(){vec3 color=texture2D(uTexture,vUv).rgb;color=(color-.5)*1.06+.54;gl_FragColor=vec4(color,1.0);}`);
       glProgram=gl.createProgram()!;gl.attachShader(glProgram,vertexShader);gl.attachShader(glProgram,fragmentShader);gl.linkProgram(glProgram);gl.useProgram(glProgram);
-      const view=new DataView(binary),vertexCount=view.getUint32(0,true),indexCount=view.getUint32(4,true),positionOffset=8,uvOffset=positionOffset+vertexCount*12,indexOffset=uvOffset+vertexCount*8;
-      const positionBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(binary,positionOffset,vertexCount*3),gl.STATIC_DRAW);const positionLocation=gl.getAttribLocation(glProgram,"aPosition");gl.enableVertexAttribArray(positionLocation);gl.vertexAttribPointer(positionLocation,3,gl.FLOAT,false,0,0);
-      const uvBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(binary,uvOffset,vertexCount*2),gl.STATIC_DRAW);const uvLocation=gl.getAttribLocation(glProgram,"aUv");gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.FLOAT,false,0,0);
-      const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(binary,indexOffset,indexCount),gl.STATIC_DRAW);glIndexCount=indexCount;
+      const view=new DataView(binary),vertexCount=view.getUint32(0,true),indexCount=view.getUint32(4,true),positionOffset=32,uvOffset=positionOffset+vertexCount*6,indexOffset=(uvOffset+vertexCount*4+3)&~3;
+      glModelMin=[view.getFloat32(8,true),view.getFloat32(12,true),view.getFloat32(16,true)];glModelRange=[view.getFloat32(20,true),view.getFloat32(24,true),view.getFloat32(28,true)];
+      if(!gl.getExtension("OES_element_index_uint"))throw new Error("32-bit WebGL indices are not supported");
+      const positionBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Uint16Array(binary,positionOffset,vertexCount*3),gl.STATIC_DRAW);const positionLocation=gl.getAttribLocation(glProgram,"aPosition");gl.enableVertexAttribArray(positionLocation);gl.vertexAttribPointer(positionLocation,3,gl.UNSIGNED_SHORT,true,0,0);
+      const uvBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Uint16Array(binary,uvOffset,vertexCount*2),gl.STATIC_DRAW);const uvLocation=gl.getAttribLocation(glProgram,"aUv");gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.UNSIGNED_SHORT,true,0,0);
+      const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(binary,indexOffset,indexCount),gl.STATIC_DRAW);glIndexCount=indexCount;
       const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,textureBitmap);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);
-      glUniforms={center:gl.getUniformLocation(glProgram,"uCenter"),viewport:gl.getUniformLocation(glProgram,"uViewport"),scale:gl.getUniformLocation(glProgram,"uScale"),yaw:gl.getUniformLocation(glProgram,"uYaw"),pitch:gl.getUniformLocation(glProgram,"uPitch")};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);
+      glUniforms={center:gl.getUniformLocation(glProgram,"uCenter"),modelMin:gl.getUniformLocation(glProgram,"uModelMin"),modelRange:gl.getUniformLocation(glProgram,"uModelRange"),viewport:gl.getUniformLocation(glProgram,"uViewport"),scale:gl.getUniformLocation(glProgram,"uScale"),yaw:gl.getUniformLocation(glProgram,"uYaw"),pitch:gl.getUniformLocation(glProgram,"uPitch")};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);
     };
     loadTextureModel().catch(()=>{});
     const onScroll = () => {
@@ -123,9 +126,9 @@ function ParticleStory() {
       const comparisonReady = comparisonEnabled;
       const dividerX = comparisonReady ? w * splitRef.current : w;
       if(gl&&glProgram&&glUniforms&&textureCanvas.current){
-        const textureDpr=Math.min(devicePixelRatio,innerWidth<760?1.15:1.5),textureTarget=textureCanvas.current;
+        const textureDpr=Math.min(devicePixelRatio,innerWidth<760?1:1.25),textureTarget=textureCanvas.current;
         if(textureTarget.width!==w*textureDpr||textureTarget.height!==h*textureDpr){textureTarget.width=w*textureDpr;textureTarget.height=h*textureDpr;gl.viewport(0,0,textureTarget.width,textureTarget.height)}
-        gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(glProgram);gl.uniform3f(glUniforms.center,center[0]||0,center[1]||0,center[2]||0);gl.uniform2f(glUniforms.viewport,w,h);gl.uniform1f(glUniforms.scale,scale);gl.uniform1f(glUniforms.yaw,rot);gl.uniform1f(glUniforms.pitch,pitch);gl.drawElements(gl.TRIANGLES,glIndexCount,gl.UNSIGNED_SHORT,0);
+        gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(glProgram);gl.uniform3f(glUniforms.center,center[0]||0,center[1]||0,center[2]||0);gl.uniform3f(glUniforms.modelMin,glModelMin[0],glModelMin[1],glModelMin[2]);gl.uniform3f(glUniforms.modelRange,glModelRange[0],glModelRange[1],glModelRange[2]);gl.uniform2f(glUniforms.viewport,w,h);gl.uniform1f(glUniforms.scale,scale);gl.uniform1f(glUniforms.yaw,rot);gl.uniform1f(glUniforms.pitch,pitch);gl.drawElements(gl.TRIANGLES,glIndexCount,gl.UNSIGNED_INT,0);
       }
       ctx.save(); ctx.beginPath(); ctx.rect(0,0,dividerX,h); ctx.clip();
       ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
