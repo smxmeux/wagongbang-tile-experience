@@ -4,16 +4,33 @@ import { CSSProperties, PointerEvent, useEffect, useRef, useState } from "react"
 
 type Point = { x: number; y: number };
 type Step = { title: string; verb: string; desc: string; hint: string; tool: string; mode: "drop" | "rub" };
+type TileTrace = { id: string; name: string; subtitle: string; description: string; anchor: [number, number, number]; imagePosition: string };
+
+const tileTraces: TileTrace[] = [
+  { id: "cloth", name: "포목흔", subtitle: "통보의 직물 조직", description: "와통과 점토 사이에 감았던 천의 경사와 위사가 점토 안쪽에 눌리며 남은 흔적입니다. 직물의 짜임과 봉합 방식을 통해 통보의 재료와 제작법을 살펴볼 수 있습니다.", anchor: [.27, .36, .70], imagePosition: "28% 35%" },
+  { id: "paddle", name: "타날흔", subtitle: "타날판이 남긴 반복 문양", description: "점토를 와통에 밀착시키고 두께를 고르게 만들기 위해 타날판으로 두드린 흔적입니다. 문양이 겹친 방향을 관찰하면 타날의 순서와 도구의 움직임을 추정할 수 있습니다.", anchor: [.48, .55, .77], imagePosition: "52% 52%" },
+  { id: "knife", name: "와도흔", subtitle: "분할을 위한 절단 자국", description: "반건조된 원통형 기와에 와도를 넣어 분할하면서 생긴 선입니다. 매끈한 와도면과 거친 파쇄면의 비율은 칼이 들어간 깊이와 방향을 알려줍니다.", anchor: [.72, .43, .64], imagePosition: "72% 42%" },
+  { id: "trim", name: "손질흔", subtitle: "내면을 다듬은 세로 절삭선", description: "와통에서 분리한 뒤 손질칼로 두꺼운 부분을 세로 방향으로 얇게 깎아낸 흔적입니다. 평행한 절삭선과 단차에서 마무리 도구의 폭과 움직임을 읽을 수 있습니다.", anchor: [.61, .72, .70], imagePosition: "60% 73%" },
+];
 
 function ParticleStory() {
   const section = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const markerRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const splitRef = useRef(.5);
   const [split, setSplit] = useState(50);
   const [meshReady, setMeshReady] = useState(false);
+  const [activeTrace, setActiveTrace] = useState<TileTrace | null>(null);
+
+  useEffect(()=>{
+    if(!activeTrace) return;
+    const close=(event:KeyboardEvent)=>{if(event.key==="Escape") setActiveTrace(null)};
+    addEventListener("keydown",close);
+    return()=>removeEventListener("keydown",close);
+  },[activeTrace]);
 
   useEffect(() => {
-    let points: number[][] = [], vertexColors: number[][] = [], faces: number[][] = [], faceColors: string[] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
+    let points: number[][] = [], vertexColors: number[][] = [], faces: number[][] = [], faceColors: string[] = [], landmarkPoints: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
@@ -28,6 +45,8 @@ function ParticleStory() {
       faces = lines.filter(l => l.startsWith("f ")).map(l => l.trim().split(/\s+/).slice(1).map(x=>Number(x)-1));
       faceColors=faces.map(face=>{const colors=face.map(i=>vertexColors[i]);const rgb=[0,1,2].map(channel=>Math.round(colors.reduce((sum,color)=>sum+(color?.[channel]||145),0)/colors.length));return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`});
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
+      const mins=[0,1,2].map(axis=>Math.min(...points.map(p=>p[axis]))), maxs=[0,1,2].map(axis=>Math.max(...points.map(p=>p[axis])));
+      landmarkPoints=tileTraces.map(trace=>trace.anchor.map((ratio,axis)=>mins[axis]+(maxs[axis]-mins[axis])*ratio));
     });
     const onScroll = () => {
       if (!section.current) return;
@@ -92,6 +111,18 @@ function ParticleStory() {
       const size=eased>.75?1.15:.8;
       for (const point of projected) if(point) ctx.fillRect(point.x,point.y,size,size);
       ctx.restore();
+      for(let markerIndex=0;markerIndex<landmarkPoints.length;markerIndex++){
+        const marker=markerRefs.current[markerIndex], point=landmarkPoints[markerIndex];
+        if(!marker || !point) continue;
+        const x=point[0]-center[0], y=point[1]-center[1], z=point[2]-center[2];
+        const xr=x*Math.cos(rot)+z*Math.sin(rot), zr=-x*Math.sin(rot)+z*Math.cos(rot);
+        const yr=y*Math.cos(pitch)-zr*Math.sin(pitch), depth=y*Math.sin(pitch)+zr*Math.cos(pitch);
+        const px=w/2+xr*scale, py=h/2+(-yr+depth*.12)*scale;
+        marker.style.transform=`translate3d(${px}px,${py}px,0)`;
+        const isOnTexture=comparisonReady && px>dividerX+18 && px<w-30 && py>30 && py<h-30;
+        marker.style.opacity=isOnTexture ? "1" : "0";
+        marker.style.pointerEvents=isOnTexture ? "auto" : "none";
+      }
       frame=requestAnimationFrame(draw);
     };
     const target = canvas.current;
@@ -104,7 +135,8 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 텍스처로 비교하는 3D 기와"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 텍스처 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 텍스처로 비교하는 3D 기와"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 텍스처 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
+    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture.jpg" alt={`${activeTrace.name} 고화질 확대 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>이미지를 확대해 표면의 미세한 요철과 도구 흔적을 관찰해 보세요.</small></div></article></div>}
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
