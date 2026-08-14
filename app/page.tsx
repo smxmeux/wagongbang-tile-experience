@@ -13,7 +13,7 @@ function ParticleStory() {
   const [meshReady, setMeshReady] = useState(false);
 
   useEffect(() => {
-    let points: number[][] = [], texcoords: number[][] = [], faces: {v:number[];t:number[]}[] = [], faceColors: string[] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
+    let points: number[][] = [], vertexColors: number[][] = [], faces: number[][] = [], faceColors: string[] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
@@ -22,20 +22,13 @@ function ParticleStory() {
     };
     fetch("/tile-model/tile.obj").then(r => r.text()).then(text => {
       const lines = text.split("\n");
-      points = lines.filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1,4).map(Number));
-      texcoords = lines.filter(l => l.startsWith("vt ")).map(l => l.trim().split(/\s+/).slice(1,3).map(Number));
-      faces = lines.filter(l => l.startsWith("f ")).map(l => {const refs=l.trim().split(/\s+/).slice(1).map(x=>x.split("/").map(Number));return {v:refs.map(x=>x[0]-1),t:refs.map(x=>x[1]-1)}});
+      const vertexRows=lines.filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1).map(Number));
+      points = vertexRows.map(row=>row.slice(0,3));
+      vertexColors = vertexRows.map(row=>row.slice(3,6).map(value=>Math.round(value*255)));
+      faces = lines.filter(l => l.startsWith("f ")).map(l => l.trim().split(/\s+/).slice(1).map(x=>Number(x)-1));
+      faceColors=faces.map(face=>{const colors=face.map(i=>vertexColors[i]);const rgb=[0,1,2].map(channel=>Math.round(colors.reduce((sum,color)=>sum+(color?.[channel]||145),0)/colors.length));return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`});
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
-      if (texture.complete) texture.onload?.(new Event("load"));
     });
-    const texture = new Image();
-    texture.src = "/tile-model/tile-texture.jpg";
-    texture.onload = () => {
-      const sample=document.createElement("canvas"), size=512; sample.width=size; sample.height=size;
-      const sampleCtx=sample.getContext("2d",{willReadFrequently:true})!; sampleCtx.drawImage(texture,0,0,size,size);
-      const pixels=sampleCtx.getImageData(0,0,size,size).data;
-      faceColors=faces.map(face=>{const uv=face.t.map(i=>texcoords[i]).filter(Boolean);if(!uv.length)return "rgb(150,145,138)";const u=uv.reduce((s,p)=>s+p[0],0)/uv.length,v=uv.reduce((s,p)=>s+p[1],0)/uv.length,x=Math.max(0,Math.min(size-1,Math.floor(u*(size-1)))),y=Math.max(0,Math.min(size-1,Math.floor((1-v)*(size-1)))),j=(y*size+x)*4;return `rgb(${pixels[j]},${pixels[j+1]},${pixels[j+2]})`});
-    };
     const onScroll = () => {
       if (!section.current) return;
       const r = section.current.getBoundingClientRect();
@@ -86,8 +79,8 @@ function ParticleStory() {
         ctx.save(); ctx.beginPath(); ctx.rect(dividerX,0,w-dividerX,h); ctx.clip();
         ctx.beginPath();
         for (let faceIndex=0;faceIndex<faces.length;faceIndex++) {
-          const face=faces[faceIndex]; if (face.v.length < 3) continue;
-          const a=projected[face.v[0]], b=projected[face.v[1]], d=projected[face.v[2]];
+          const face=faces[faceIndex]; if (face.length < 3) continue;
+          const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
           if (!a || !b || !d) continue;
           if ((b.x-a.x)*(d.y-a.y)-(b.y-a.y)*(d.x-a.x) > 0) continue;
           ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fillStyle=faceColors[faceIndex]||"rgb(150,145,138)";ctx.fill();
