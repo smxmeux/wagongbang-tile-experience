@@ -16,6 +16,7 @@ const tileTraces: TileTrace[] = [
 function ParticleStory() {
   const section = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const textureCanvas = useRef<HTMLCanvasElement>(null);
   const markerRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const splitRef = useRef(.5);
   const [split, setSplit] = useState(50);
@@ -30,8 +31,10 @@ function ParticleStory() {
   },[activeTrace]);
 
   useEffect(() => {
-    let points: number[][] = [], vertexColors: number[][] = [], faces: number[][] = [], faceColors: string[] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
+    let points: number[][] = [], faces: number[][] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
+    let gl: WebGLRenderingContext | null = null, glProgram: WebGLProgram | null = null, glIndexCount = 0, textureBitmap: ImageBitmap | null = null;
+    let glUniforms: { center: WebGLUniformLocation | null; viewport: WebGLUniformLocation | null; scale: WebGLUniformLocation | null; yaw: WebGLUniformLocation | null; pitch: WebGLUniformLocation | null } | null = null;
     const seeds = (i: number) => {
       const a = Math.sin(i * 91.733) * 43758.5453;
       const b = Math.sin(i * 47.113 + 2) * 24634.6345;
@@ -41,9 +44,7 @@ function ParticleStory() {
       const lines = text.split("\n");
       const vertexRows=lines.filter(l => l.startsWith("v ")).map(l => l.trim().split(/\s+/).slice(1).map(Number));
       points = vertexRows.map(row=>row.slice(0,3));
-      vertexColors = vertexRows.map(row=>row.slice(3,6).map(value=>Math.round(value*255)));
       faces = lines.filter(l => l.startsWith("f ")).map(l => l.trim().split(/\s+/).slice(1).map(x=>Number(x)-1));
-      faceColors=faces.map(face=>{const colors=face.map(i=>vertexColors[i]);const rgb=[0,1,2].map(channel=>{const average=colors.reduce((sum,color)=>sum+(color?.[channel]||145),0)/colors.length;return Math.max(22,Math.min(248,Math.round((average-128)*1.16+142)))});return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`});
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
       const mins=[0,1,2].map(axis=>Math.min(...points.map(p=>p[axis]))), maxs=[0,1,2].map(axis=>Math.max(...points.map(p=>p[axis])));
       landmarkFaces=tileTraces.map(trace=>{
@@ -57,6 +58,24 @@ function ParticleStory() {
         return nearest;
       });
     });
+    const compileShader=(context:WebGLRenderingContext,type:number,source:string)=>{const shader=context.createShader(type)!;context.shaderSource(shader,source);context.compileShader(shader);if(!context.getShaderParameter(shader,context.COMPILE_STATUS))throw new Error(context.getShaderInfoLog(shader)||"WebGL shader error");return shader};
+    const loadTextureModel=async()=>{
+      const target=textureCanvas.current;if(!target)return;
+      const [binary,imageBlob]=await Promise.all([fetch("/tile-model/tile-webgl.bin").then(response=>response.arrayBuffer()),fetch("/tile-model/tile-texture-4k.webp").then(response=>response.blob())]);
+      if(!alive)return;
+      textureBitmap=await createImageBitmap(imageBlob);
+      gl=target.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});if(!gl)return;
+      const vertexShader=compileShader(gl,gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec2 aUv;uniform vec3 uCenter;uniform vec2 uViewport;uniform float uScale;uniform float uYaw;uniform float uPitch;varying vec2 vUv;void main(){vec3 p=aPosition-uCenter;float cy=cos(uYaw),sy=sin(uYaw);float xr=p.x*cy+p.z*sy;float zr=-p.x*sy+p.z*cy;float cp=cos(uPitch),sp=sin(uPitch);float yr=p.y*cp-zr*sp;float depth=p.y*sp+zr*cp;gl_Position=vec4(2.0*xr*uScale/uViewport.x,2.0*(yr-depth*.12)*uScale/uViewport.y,-depth/420.0,1.0);vUv=aUv;}`);
+      const fragmentShader=compileShader(gl,gl.FRAGMENT_SHADER,`precision mediump float;uniform sampler2D uTexture;varying vec2 vUv;void main(){vec3 color=texture2D(uTexture,vUv).rgb;color=(color-.5)*1.06+.54;gl_FragColor=vec4(color,1.0);}`);
+      glProgram=gl.createProgram()!;gl.attachShader(glProgram,vertexShader);gl.attachShader(glProgram,fragmentShader);gl.linkProgram(glProgram);gl.useProgram(glProgram);
+      const view=new DataView(binary),vertexCount=view.getUint32(0,true),indexCount=view.getUint32(4,true),positionOffset=8,uvOffset=positionOffset+vertexCount*12,indexOffset=uvOffset+vertexCount*8;
+      const positionBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(binary,positionOffset,vertexCount*3),gl.STATIC_DRAW);const positionLocation=gl.getAttribLocation(glProgram,"aPosition");gl.enableVertexAttribArray(positionLocation);gl.vertexAttribPointer(positionLocation,3,gl.FLOAT,false,0,0);
+      const uvBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(binary,uvOffset,vertexCount*2),gl.STATIC_DRAW);const uvLocation=gl.getAttribLocation(glProgram,"aUv");gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.FLOAT,false,0,0);
+      const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(binary,indexOffset,indexCount),gl.STATIC_DRAW);glIndexCount=indexCount;
+      const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,textureBitmap);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);
+      glUniforms={center:gl.getUniformLocation(glProgram,"uCenter"),viewport:gl.getUniformLocation(glProgram,"uViewport"),scale:gl.getUniformLocation(glProgram,"uScale"),yaw:gl.getUniformLocation(glProgram,"uYaw"),pitch:gl.getUniformLocation(glProgram,"uPitch")};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);
+    };
+    loadTextureModel().catch(()=>{});
     const onScroll = () => {
       if (!section.current) return;
       const r = section.current.getBoundingClientRect();
@@ -103,17 +122,10 @@ function ParticleStory() {
       }
       const comparisonReady = comparisonEnabled;
       const dividerX = comparisonReady ? w * splitRef.current : w;
-      if (comparisonReady) {
-        ctx.save(); ctx.beginPath(); ctx.rect(dividerX,0,w-dividerX,h); ctx.clip();
-        ctx.beginPath();
-        for (let faceIndex=0;faceIndex<faces.length;faceIndex++) {
-          const face=faces[faceIndex]; if (face.length < 3) continue;
-          const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
-          if (!a || !b || !d) continue;
-          if ((b.x-a.x)*(d.y-a.y)-(b.y-a.y)*(d.x-a.x) > 0) continue;
-          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fillStyle=faceColors[faceIndex]||"rgb(150,145,138)";ctx.globalAlpha=1;ctx.fill();ctx.lineWidth=.65;ctx.strokeStyle=ctx.fillStyle;ctx.stroke();
-        }
-        ctx.restore();
+      if(gl&&glProgram&&glUniforms&&textureCanvas.current){
+        const textureDpr=Math.min(devicePixelRatio,innerWidth<760?1.15:1.5),textureTarget=textureCanvas.current;
+        if(textureTarget.width!==w*textureDpr||textureTarget.height!==h*textureDpr){textureTarget.width=w*textureDpr;textureTarget.height=h*textureDpr;gl.viewport(0,0,textureTarget.width,textureTarget.height)}
+        gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(glProgram);gl.uniform3f(glUniforms.center,center[0]||0,center[1]||0,center[2]||0);gl.uniform2f(glUniforms.viewport,w,h);gl.uniform1f(glUniforms.scale,scale);gl.uniform1f(glUniforms.yaw,rot);gl.uniform1f(glUniforms.pitch,pitch);gl.drawElements(gl.TRIANGLES,glIndexCount,gl.UNSIGNED_SHORT,0);
       }
       ctx.save(); ctx.beginPath(); ctx.rect(0,0,dividerX,h); ctx.clip();
       ctx.fillStyle = `rgba(245,245,240,${.18 + eased*.72})`;
@@ -139,13 +151,13 @@ function ParticleStory() {
     target?.addEventListener("pointerdown",onPointerDown); target?.addEventListener("pointermove",onPointerMove);
     target?.addEventListener("pointerup",onPointerUp); target?.addEventListener("pointercancel",onPointerUp);
     onScroll(); draw();
-    return()=>{alive=false;cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
+    return()=>{alive=false;textureBitmap?.close();cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
   },[]);
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={canvas} aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 텍스처로 비교하는 3D 기와"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 텍스처 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
-    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture.jpg" alt={`${activeTrace.name} 고화질 확대 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>이미지를 확대해 표면의 미세한 요철과 도구 흔적을 관찰해 보세요.</small></div></article></div>}
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={textureCanvas} className={`texture-canvas ${meshReady?"ready":""}`} style={{clipPath:`inset(0 0 0 ${split}%)`}} aria-hidden="true"/><canvas ref={canvas} className="particle-canvas" aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 고화질 텍스처로 비교하는 3D 기와"/><input className={`mesh-range ${meshReady?"ready":""}`} type="range" min="8" max="92" step=".1" value={split} aria-label="점군과 텍스처 비교 막대" onChange={e=>{const value=Number(e.currentTarget.value);splitRef.current=value/100;setSplit(value)}}/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
+    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture-4k.webp" alt={`${activeTrace.name} 고화질 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>고화질 사진에서 표면의 미세한 요철과 도구 흔적을 관찰해 보세요.</small></div></article></div>}
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
 }
