@@ -43,7 +43,7 @@ function ParticleStory() {
       points = vertexRows.map(row=>row.slice(0,3));
       vertexColors = vertexRows.map(row=>row.slice(3,6).map(value=>Math.round(value*255)));
       faces = lines.filter(l => l.startsWith("f ")).map(l => l.trim().split(/\s+/).slice(1).map(x=>Number(x)-1));
-      faceColors=faces.map(face=>{const colors=face.map(i=>vertexColors[i]);const rgb=[0,1,2].map(channel=>Math.round(colors.reduce((sum,color)=>sum+(color?.[channel]||145),0)/colors.length));return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`});
+      faceColors=faces.map(face=>{const colors=face.map(i=>vertexColors[i]);const rgb=[0,1,2].map(channel=>{const average=colors.reduce((sum,color)=>sum+(color?.[channel]||145),0)/colors.length;return Math.max(22,Math.min(248,Math.round((average-128)*1.16+142)))});return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`});
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
       const mins=[0,1,2].map(axis=>Math.min(...points.map(p=>p[axis]))), maxs=[0,1,2].map(axis=>Math.max(...points.map(p=>p[axis])));
       landmarkFaces=tileTraces.map(trace=>{
@@ -81,9 +81,9 @@ function ParticleStory() {
       if (time - lastDraw < 32) { frame=requestAnimationFrame(draw); return; }
       lastDraw = time;
       const c = canvas.current, ctx = c.getContext("2d")!;
-      const dpr = Math.min(devicePixelRatio, innerWidth < 760 ? 1 : 1.25), w = c.clientWidth, h = c.clientHeight;
+      const dpr = Math.min(devicePixelRatio, innerWidth < 760 ? 1.15 : 1.5), w = c.clientWidth, h = c.clientHeight;
       if (c.width !== w*dpr || c.height !== h*dpr) { c.width=w*dpr; c.height=h*dpr; }
-      ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=true;ctx.clearRect(0,0,w,h);
       const eased = progress < .08 ? 0 : 1 - Math.pow(1 - Math.min(1,(progress-.08)/.7), 3);
       const scale = Math.min(w/460,h/270) * (.72 + eased*.24);
       if (eased > .82 && !dragging) {
@@ -111,7 +111,7 @@ function ParticleStory() {
           const a=projected[face[0]], b=projected[face[1]], d=projected[face[2]];
           if (!a || !b || !d) continue;
           if ((b.x-a.x)*(d.y-a.y)-(b.y-a.y)*(d.x-a.x) > 0) continue;
-          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fillStyle=faceColors[faceIndex]||"rgb(150,145,138)";ctx.fill();
+          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fillStyle=faceColors[faceIndex]||"rgb(150,145,138)";ctx.globalAlpha=1;ctx.fill();ctx.lineWidth=.65;ctx.strokeStyle=ctx.fillStyle;ctx.stroke();
         }
         ctx.restore();
       }
