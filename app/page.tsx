@@ -20,6 +20,7 @@ function ParticleStory() {
   const markerRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const splitRef = useRef(.5);
   const splitDragOffset = useRef(0);
+  const splitDragging = useRef(false);
   const [split, setSplit] = useState(50);
   const [meshReady, setMeshReady] = useState(false);
   const [activeTrace, setActiveTrace] = useState<TileTrace | null>(null);
@@ -30,6 +31,23 @@ function ParticleStory() {
     addEventListener("keydown",close);
     return()=>removeEventListener("keydown",close);
   },[activeTrace]);
+
+  useEffect(()=>{
+    const move=(event:globalThis.PointerEvent)=>{
+      if(!splitDragging.current) return;
+      const sticky=section.current?.querySelector<HTMLElement>(".particle-sticky");
+      if(!sticky) return;
+      const bounds=sticky.getBoundingClientRect();
+      const next=Math.max(8,Math.min(92,((event.clientX-splitDragOffset.current-bounds.left)/bounds.width)*100));
+      splitRef.current=next/100;
+      setSplit(next);
+    };
+    const stop=()=>{splitDragging.current=false};
+    addEventListener("pointermove",move);
+    addEventListener("pointerup",stop);
+    addEventListener("pointercancel",stop);
+    return()=>{removeEventListener("pointermove",move);removeEventListener("pointerup",stop);removeEventListener("pointercancel",stop)};
+  },[]);
 
   useEffect(() => {
     let points: number[][] = [], faces: number[][] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
@@ -163,22 +181,17 @@ function ParticleStory() {
     splitRef.current = next / 100;
     setSplit(next);
   };
-  const moveComparisonHandle = (event: PointerEvent<HTMLButtonElement>) => {
-    const sticky = section.current?.querySelector<HTMLElement>(".particle-sticky");
-    if (!sticky) return;
-    const bounds = sticky.getBoundingClientRect();
-    setComparisonSplit(((event.clientX - splitDragOffset.current - bounds.left) / bounds.width) * 100);
-  };
   const startComparisonHandle = (event: PointerEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     const bounds = event.currentTarget.getBoundingClientRect();
     splitDragOffset.current = event.clientX - (bounds.left + bounds.width / 2);
+    splitDragging.current = true;
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={textureCanvas} className={`texture-canvas ${meshReady?"ready":""}`} style={{clipPath:`inset(0 0 0 ${split}%)`}} aria-hidden="true"/><canvas ref={canvas} className="particle-canvas" aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 고화질 텍스처로 비교하는 3D 기와"/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b><button className="mesh-handle" type="button" role="slider" aria-label="점군과 텍스처 비교 막대" aria-valuemin={8} aria-valuemax={92} aria-valuenow={Math.round(split)} onPointerDown={startComparisonHandle} onPointerMove={event=>{if(event.currentTarget.hasPointerCapture(event.pointerId)) moveComparisonHandle(event)}} onKeyDown={event=>{if(event.key==="ArrowLeft"||event.key==="ArrowDown"){event.preventDefault();setComparisonSplit(split-2)}else if(event.key==="ArrowRight"||event.key==="ArrowUp"){event.preventDefault();setComparisonSplit(split+2)}else if(event.key==="Home"){event.preventDefault();setComparisonSplit(8)}else if(event.key==="End"){event.preventDefault();setComparisonSplit(92)}}}>↔</button></div>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={textureCanvas} className={`texture-canvas ${meshReady?"ready":""}`} style={{clipPath:`inset(0 0 0 ${split}%)`}} aria-hidden="true"/><canvas ref={canvas} className="particle-canvas" aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 고화질 텍스처로 비교하는 3D 기와"/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b><button className="mesh-handle" type="button" role="slider" aria-label="점군과 텍스처 비교 막대" aria-valuemin={8} aria-valuemax={92} aria-valuenow={Math.round(split)} onPointerDown={startComparisonHandle} onPointerUp={()=>{splitDragging.current=false}} onPointerCancel={()=>{splitDragging.current=false}} onKeyDown={event=>{if(event.key==="ArrowLeft"||event.key==="ArrowDown"){event.preventDefault();setComparisonSplit(split-2)}else if(event.key==="ArrowRight"||event.key==="ArrowUp"){event.preventDefault();setComparisonSplit(split+2)}else if(event.key==="Home"){event.preventDefault();setComparisonSplit(8)}else if(event.key==="End"){event.preventDefault();setComparisonSplit(92)}}}>↔</button></div>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
     {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture-4k-v2.webp" alt={`${activeTrace.name} 고화질 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>고화질 사진에서 표면의 미세한 요철과 도구 흔적을 관찰해 보세요.</small></div></article></div>}
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
