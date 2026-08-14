@@ -33,7 +33,7 @@ function ParticleStory() {
   useEffect(() => {
     let points: number[][] = [], faces: number[][] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
-    let gl: WebGLRenderingContext | null = null, glProgram: WebGLProgram | null = null, glIndexCount = 0, textureBitmap: ImageBitmap | null = null;
+    let gl: WebGLRenderingContext | null = null, glProgram: WebGLProgram | null = null, glIndexCount = 0, textureImage: HTMLImageElement | null = null;
     let glUniforms: { center: WebGLUniformLocation | null; modelMin: WebGLUniformLocation | null; modelRange: WebGLUniformLocation | null; viewport: WebGLUniformLocation | null; scale: WebGLUniformLocation | null; yaw: WebGLUniformLocation | null; pitch: WebGLUniformLocation | null } | null = null;
     let glModelMin=[0,0,0],glModelRange=[1,1,1];
     const seeds = (i: number) => {
@@ -64,7 +64,7 @@ function ParticleStory() {
       const target=textureCanvas.current;if(!target)return;
       const [binary,imageBlob]=await Promise.all([fetch("/tile-model/tile-webgl.bin").then(response=>response.arrayBuffer()),fetch("/tile-model/tile-texture-4k.webp").then(response=>response.blob())]);
       if(!alive)return;
-      textureBitmap=await createImageBitmap(imageBlob);
+      const imageUrl=URL.createObjectURL(imageBlob);textureImage=new Image();textureImage.src=imageUrl;await textureImage.decode();URL.revokeObjectURL(imageUrl);
       gl=target.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});if(!gl)return;
       const vertexShader=compileShader(gl,gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec2 aUv;uniform vec3 uCenter;uniform vec3 uModelMin;uniform vec3 uModelRange;uniform vec2 uViewport;uniform float uScale;uniform float uYaw;uniform float uPitch;varying vec2 vUv;void main(){vec3 p=(uModelMin+aPosition*uModelRange)-uCenter;float cy=cos(uYaw),sy=sin(uYaw);float xr=p.x*cy+p.z*sy;float zr=-p.x*sy+p.z*cy;float cp=cos(uPitch),sp=sin(uPitch);float yr=p.y*cp-zr*sp;float depth=p.y*sp+zr*cp;gl_Position=vec4(2.0*xr*uScale/uViewport.x,2.0*(yr-depth*.12)*uScale/uViewport.y,-depth/420.0,1.0);vUv=aUv;}`);
       const fragmentShader=compileShader(gl,gl.FRAGMENT_SHADER,`precision mediump float;uniform sampler2D uTexture;varying vec2 vUv;void main(){vec3 color=texture2D(uTexture,vUv).rgb;color=(color-.5)*1.06+.54;gl_FragColor=vec4(color,1.0);}`);
@@ -75,10 +75,10 @@ function ParticleStory() {
       const positionBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Uint16Array(binary,positionOffset,vertexCount*3),gl.STATIC_DRAW);const positionLocation=gl.getAttribLocation(glProgram,"aPosition");gl.enableVertexAttribArray(positionLocation);gl.vertexAttribPointer(positionLocation,3,gl.UNSIGNED_SHORT,true,0,0);
       const uvBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Uint16Array(binary,uvOffset,vertexCount*2),gl.STATIC_DRAW);const uvLocation=gl.getAttribLocation(glProgram,"aUv");gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.UNSIGNED_SHORT,true,0,0);
       const indexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(binary,indexOffset,indexCount),gl.STATIC_DRAW);glIndexCount=indexCount;
-      const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,textureBitmap);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);
+      const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,0);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,textureImage);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);
       glUniforms={center:gl.getUniformLocation(glProgram,"uCenter"),modelMin:gl.getUniformLocation(glProgram,"uModelMin"),modelRange:gl.getUniformLocation(glProgram,"uModelRange"),viewport:gl.getUniformLocation(glProgram,"uViewport"),scale:gl.getUniformLocation(glProgram,"uScale"),yaw:gl.getUniformLocation(glProgram,"uYaw"),pitch:gl.getUniformLocation(glProgram,"uPitch")};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);
     };
-    loadTextureModel().catch(()=>{});
+    loadTextureModel().catch(error=>console.error("Tile WebGL initialization failed",error));
     const onScroll = () => {
       if (!section.current) return;
       const r = section.current.getBoundingClientRect();
@@ -154,7 +154,7 @@ function ParticleStory() {
     target?.addEventListener("pointerdown",onPointerDown); target?.addEventListener("pointermove",onPointerMove);
     target?.addEventListener("pointerup",onPointerUp); target?.addEventListener("pointercancel",onPointerUp);
     onScroll(); draw();
-    return()=>{alive=false;textureBitmap?.close();cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
+    return()=>{alive=false;if(textureImage)textureImage.src="";cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
   },[]);
 
   return <>
