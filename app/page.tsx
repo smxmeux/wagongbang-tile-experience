@@ -7,11 +7,12 @@ type Step = { title: string; verb: string; desc: string; hint: string; tool: str
 type TileTrace = { id: string; name: string; subtitle: string; description: string; anchor: [number, number, number]; imagePosition: string };
 
 const tileTraces: TileTrace[] = [
-  { id: "cloth", name: "포목흔", subtitle: "통보의 직물 조직", description: "와통과 점토 사이에 감았던 천의 경사와 위사가 점토 안쪽에 눌리며 남은 흔적입니다. 직물의 짜임과 봉합 방식을 통해 통보의 재료와 제작법을 살펴볼 수 있습니다.", anchor: [.27, .36, .70], imagePosition: "28% 35%" },
+  { id: "cloth", name: "포목흔", subtitle: "기와에 남은 직물의 흔적", description: "기와 안쪽을 가까이 살펴보면 서로 다른 두 방향으로 교차하는 가느다란 선들이 촘촘하게 반복됩니다. 이는 기와를 성형할 때 와통에 씌운 통보(筒布)의 직물조직이 부드러운 점토에 눌려 전사된 포목흔(布目痕)입니다. 통보는 점토가 나무 와통에 직접 달라붙는 것을 막고 성형이 끝난 뒤 기와를 쉽게 분리할 수 있도록 사용되었습니다. 제작이 끝나면서 통보는 사라졌지만, 천의 조직은 기와 내면에 그대로 남았습니다.이 미세한 직물조직을 보다 분명하게 확인하기 위해 3D 스캔으로 취득한 형상에 AO(Ambient Occlusion)를 적용했습니다. AO는 좁은 홈이나 서로 가까이 맞닿은 요철을 상대적으로 어둡게 표현하여, 일반적인 텍스처에서는 흐릿하게 보이는 미세한 선의 윤곽과 연속성을 선명하게 보여주는 가시화 방법입니다. 이를 통해 포목흔을 구성하는 두 방향의 조직을 구분하고, 일정한 영역을 설정하여 실자국의 폭과 간격, 단위면적 안에서 확인되는 조직의 수와 배열을 비교했습니다.여기에서 측정되어 얻을 수 있는 값은 단순히 통보를 구성했던 원단의 모양이 아니라, 점토에 전사되어 현재까지 남은 실자국의 폭과 조직밀도 등의 정보입니다. 조직의 조밀도와 배열, 상대적인 굵기를 통해 제작에 사용된 통보의 특성을 살펴볼 수 있습니다.포목흔은 단순히 기와 표면에 남은 무늬가 아닙니다. 현재는 사라진 통보와 와통 성형과정을 다시 확인할 수 있게 하는 제작의 기록입니다. 웹뷰어에서 원본 3D 데이터와 AO 가시화를 전환하며 두 방향의 직물조직과 그 간격, 밀도의 차이를 직접 살펴보실 수 있습니다.", anchor: [.27, .36, .70], imagePosition: "28% 35%" },
   { id: "paddle", name: "타날흔", subtitle: "타날판이 남긴 반복 문양", description: "점토를 와통에 밀착시키고 두께를 고르게 만들기 위해 타날판으로 두드린 흔적입니다. 문양이 겹친 방향을 관찰하면 타날의 순서와 도구의 움직임을 추정할 수 있습니다.", anchor: [.48, .55, .77], imagePosition: "52% 52%" },
-  { id: "knife", name: "와도흔", subtitle: "분할을 위한 절단 자국", description: "반건조된 원통형 기와에 와도를 넣어 분할하면서 생긴 선입니다. 매끈한 와도면과 거친 파쇄면의 비율은 칼이 들어간 깊이와 방향을 알려줍니다.", anchor: [.72, .43, .64], imagePosition: "72% 42%" },
-  { id: "trim", name: "손질흔", subtitle: "내면을 다듬은 세로 절삭선", description: "와통에서 분리한 뒤 손질칼로 두꺼운 부분을 세로 방향으로 얇게 깎아낸 흔적입니다. 평행한 절삭선과 단차에서 마무리 도구의 폭과 움직임을 읽을 수 있습니다.", anchor: [.61, .72, .70], imagePosition: "60% 73%" },
+  { id: "knife", name: "인장", subtitle: "두 개의 인장이 남긴 것", description: "기와 외면에는 다른 제작흔과 구별되는 두 개의 원형 압흔이 남아 있습니다. 내부에는 글자로 보이는 획이 확인되며, 육안으로도 어느 정도 형태를 살펴볼 수 있습니다. 이번에는 3D 스캔으로 취득한 형상에 곡률맵(Curvature Map)을 적용하여 압흔 안쪽의 미세한 굴곡을 조금 더 분명하게 확인했습니다. 곡률맵은 표면이 휘거나 꺾이는 정도를 명암이나 색의 차이로 강조해, 얕게 눌린 획과 주변 표면을 구분하기 쉽게 보여주는 가시화 방법입니다. 이를 통해 두 압흔의 내부 획을 살펴본 결과 각각 ‘巳’와 ‘刀’로 읽힐 가능성을 확인했습니다.이처럼 문자나 기호가 새겨진 도장을 기와가 아직 마르기 전에 눌러 찍은 것을 일반적으로 인장와(印章瓦) 또는 인각와(印刻瓦)라 부릅니다. 백제의 인장와는 특히 사비기 유적에서 다수 확인되며, 한 글자만 찍은 경우도 있고 둘 이상의 인장을 조합해 사용한 사례도 있습니다. ‘巳’와 ‘刀’ 역시 백제 수키와에서 함께 확인되는 조합으로 알려져 있어, 이 기와의 두 압흔을 해석할 때 비교할 수 있는 중요한 사례가 됩니다.그렇다면 왜 기와에 이런 글자나 기호를 남겼을까요? 인장와는 단순한 장식으로 보기 어렵습니다. 기와가 대량으로 생산되고 여러 제작집단과 생산공정이 운영되는 과정에서 생산·관리와 관련된 표식으로 사용되었을 가능성이 오래전부터 논의되어 왔습니다. 일부 문자는 제작집단이나 행정단위, 생산 시기 등과 연결해 해석되기도 하지만, 모든 인장의 의미가 명확하게 밝혀진 것은 아닙니다. 같은 문자라도 출토 장소와 다른 인장과의 조합에 따라 의미가 달라질 가능성이 있기 때문에 개별 인장의 기능을 하나로 단정하기는 어렵습니다.따라서 이 기와에서 확인되는 ‘巳’와 ‘刀’ 역시 특정 제작자나 관청을 곧바로 가리킨다고 보지는 않습니다. 중요한 것은 기와 제작 과정에서 일정한 표식을 의도적으로 남겼다는 사실이며, 이러한 인장와가 당시 기와 생산이 단순한 개별 작업을 넘어 일정한 관리와 체계 속에서 이루어졌을 가능성을 보여주는 자료라는 점입니다.웹뷰어에서 실제 표면과 곡률맵을 비교해보세요. 육안으로 보이는 두 압흔과 곡률맵에서 강조되는 획을 살펴보며 ‘巳’와 ‘刀’로 추정한 형태를 직접 확인하실 수 있습니다.", anchor: [.72, .43, .64], imagePosition: "72% 42%" },
+  { id: "trim", name: "합철흔", subtitle: "천과 천이 만난 자리", description: "기와 내면의 규칙적인 포목흔을 따라가다 보면 주변의 포목흔과 달리 길게 이어지는 선형 흔적을 발견할 수 있습니다. 그 안에는 작은 종적으로 눌린 압흔도 반복적으로 나타납니다. 이러한 흔적은 와통에 씌운 통보의 양쪽 끝을 서로 꿰매 연결하면서 형성된 합철흔(合綴痕)일 가능성이 있습니다. 통보의 봉제부가 부드러운 점토에 눌리면 직물조직과 다른 형태의 이음매가 기와 안쪽에 남을 수 있습니다.이 흔적의 성격을 확인하기 위해 3D 스캔 데이터를 확대하고 AO와 음영 가시화를 적용했습니다. AO는 깊게 들어간 선과 그 안의 작은 요철을 강조해, 육안으로는 하나의 굵은 선처럼 보이던 영역을 보다 세밀하게 관찰할 수 있게 합니다. 이를 통해 선형 흔적의 진행방향과 폭, 반복되는 작은 압흔의 수와 간격, 흔적 양쪽에서 포목조직이 이어지는 방식을 살펴보았습니다. 일정한 간격으로 압흔이 반복되거나 이음선을 경계로 조직의 흐름이 달라진다면 봉제된 통보가 점토에 전사되었을 가능성을 보다 구체적으로 검토할 수 있습니다.웹뷰어에서 긴 선형 흔적을 따라 이동하며 반복되는 압흔과 주변의 포목조직이 어떻게 이어지는지 직접 비교해보실 수 있습니다.", anchor: [.61, .72, .70], imagePosition: "60% 73%" },
 ];
+
 
 function ParticleStory() {
   const section = useRef<HTMLElement>(null);
@@ -190,7 +191,7 @@ function ParticleStory() {
   };
 
   return <>
-    <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>흙의 기억을<br/>깨우다</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
+    <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>기와가<br/>기억하는 손</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
     <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={textureCanvas} className={`texture-canvas ${meshReady?"ready":""}`} style={{clipPath:`inset(0 0 0 ${split}%)`}} aria-hidden="true"/><canvas ref={canvas} className="particle-canvas" aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 고화질 텍스처로 비교하는 3D 기와"/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div><button className={`mesh-handle ${meshReady?"ready":""}`} style={{left:`${split}%`}} type="button" role="slider" aria-label="점군과 텍스처 비교 막대" aria-valuemin={8} aria-valuemax={92} aria-valuenow={Math.round(split)} onPointerDown={startComparisonHandle} onPointerUp={()=>{splitDragging.current=false}} onPointerCancel={()=>{splitDragging.current=false}} onKeyDown={event=>{if(event.key==="ArrowLeft"||event.key==="ArrowDown"){event.preventDefault();setComparisonSplit(split-2)}else if(event.key==="ArrowRight"||event.key==="ArrowUp"){event.preventDefault();setComparisonSplit(split+2)}else if(event.key==="Home"){event.preventDefault();setComparisonSplit(8)}else if(event.key==="End"){event.preventDefault();setComparisonSplit(92)}}}>↔</button>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
     {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture-4k-v2.webp" alt={`${activeTrace.name} 고화질 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>고화질 사진에서 표면의 미세한 요철과 도구 흔적을 관찰해 보세요.</small></div></article></div>}
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
@@ -198,28 +199,26 @@ function ParticleStory() {
 }
 
 const steps: Step[] = [
-  { title: "흙고름", verb: "흙을 채취해 돌과 이물질을 제거하고 여러 흙을 고르게 혼합한다.", desc: "여러 흙과 모래가 섞여 있어요. 기와 제작에 사용할 가는 점토, 고운 점토, 굵은 모래를 찾아 바구니로 옮겨보세요.", hint: "가는 점토·고운 점토·굵은 모래, 세 가지 재료를 고르세요.", tool: "흙", mode: "drop" },
-  { title: "소지 작업", verb: "숙성된 흙을 일정한 두께의 점토판으로 만든다.", desc: "점토 3개를 직사각형 틀 안에 층층이 쌓은 뒤, 쨀줄을 가로로 당겨 일정한 두께의 흙판을 만듭니다.", hint: "왼쪽 점토 3개를 틀에 쌓고, 쨀줄로 3장의 흙판을 잘라내세요.", tool: "쨀줄", mode: "rub" },
-  { title: "와통에 섬유 붙이기", verb: "와통에 포목을 감아 점토판을 붙일 준비를 한다.", desc: "원통와통에 통보를 팽팽하게 씌워 점토가 나무에 달라붙지 않도록 합니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
-  { title: "와통에 흙 붙이기", verb: "점토판을 와통에 감아 붙인다.", desc: "통보 위에 흙판을 감고 빈틈없이 눌러 일정한 곡률을 만듭니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
-  { title: "외면 다듬기", verb: "붓으로 표면을 정리한다.", desc: "물을 묻힌 붓으로 거친 외면과 접합부를 부드럽게 정리합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
-  { title: "2분할", verb: "와도로 홈을 내, 두 장으로 나눈다.", desc: "수키와가 두 장으로 갈라지도록 와도로 양쪽에 일정한 깊이의 홈을 냅니다.", hint: "와도를 잡고 점선을 따라 위에서 아래로 그으세요.", tool: "와도", mode: "rub" },
-  { title: "와통 분리", verb: "와통을 제거한다", desc: "반건조된 점토 껍질은 그대로 두고, 안쪽의 원통와통과 통보를 위로 조심스럽게 빼냅니다.", hint: "와통 손잡이를 잡고 위쪽으로 여러 번 끌어올리세요.", tool: "와통", mode: "rub" },
-  { title: "손질 칼로 깎기", verb: "내면의 불필요한 점토와 요철을 손질 칼로 정리한다.", desc: "내면의 두꺼운 곳과 절단면을 얇게 깎아 곡률과 측면을 정돈합니다.", hint: "칼을 잡고 기와 안쪽을 골고루 훑으세요.", tool: "손질칼", mode: "rub" },
-  { title: "굽기", verb: "충분히 건조한 기와를 가마에서 환원소성하여 완성한다.", desc: "완전히 건조된 기와를 가마에서 구워 단단한 전통 기와로 완성합니다.", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },
-];
+  { title: "흙 고르기", verb: "모든 기와는, 흙을 고르는 일에서 시작됩니다.", desc: "기와 만들기는 알맞은 흙을 준비하는 것에서 시작합니다. 채취한 흙에 섞인 돌과 뿌리 같은 이물질을 골라내고, 점토의 상태가 고르게 되도록 다듬습니다. 이렇게 준비한 점토는 이후 일정한 두께와 형태를 만들고, 건조와 소성 과정에서 기와가 안정적으로 형태를 유지할 수 있는 바탕이 됩니다", hint: "가는 점토·고운 점토·굵은 모래, 세 가지 재료를 고르세요.", tool: "흙", mode: "drop" },
+  { title: "소지 작업", verb: "둥근 기와도 처음에는 평평한 흙판이었습니다.", desc: "잘 고른 점토를 충분히 다지고 일정한 크기로 나눈 뒤, 겹쳐 쌓아 하나의 점토 덩어리로 만듭니다. 이를 다시 일정한 두께로 잘라 기와의 몸체가 될 점토판을 마련합니다. 아직은 평평한 흙판이지만, 이 점토판이 다음 단계에서 와통의 곡면을 따라 둥근 수키와의 형태를 갖추게 됩니다", hint: "왼쪽 점토 3개를 틀에 쌓고, 쨀줄로 3장의 흙판을 가로로 잘라내세요.", tool: "쨀줄", mode: "rub" },
+  { title: "통보 씌우기", verb: "기와를 만들기 위한 조연들", desc: "점토판을 붙이기 전에 나무로 만든 와통에 통보(筒布)를 고르게 둘러줍니다. 통보는 점토가 와통에 직접 달라붙는 것을 막아 나중에 쉽게 분리할 수 있도록 돕습니다. 점토가 통보 위에서 눌리면 천의 직물조직과 이음매가 그대로 전사되어 완성된 기와 안쪽에 포목흔과 합철흔으로 남게 됩니다.", hint: "접힌 천을 원통와통 중앙으로 옮기세요.", tool: "통보", mode: "drop" },
+  { title: "와통에 흙 붙이기", verb: "평평한 흙에서, 곡선의 기와로", desc: "통보를 씌운 와통 둘레에 준비한 점토판을 감아 붙입니다. 점토판의 양 끝이 맞닿는 부분을 연결하고, 손이나 도구로 누르고 두드리며 와통의 곡면에 밀착시킵니다. 이 과정에서 평평했던 점토판은 와통의 형태를 따라 둥근 곡면을 얻고, 기와의 기본적인 두께와 형태도 함께 만들어집니다.", hint: "흙판을 원통와통 중앙으로 옮기세요.", tool: "흙판", mode: "drop" },
+  { title: "외면 다듬기", verb: "손질은 또다른 흔적으로", desc: "와통 위에서 기본 형태를 갖춘 점토의 외면을 다시 다듬습니다. 물을 묻혀 문지르거나 손, 솔과 같은 여러 도구를 이용하면 성형 과정에서 생긴 거친 요철을 줄이고 표면을 정리할 수 있습니다. 이러한 마무리 과정은 기와의 표면을 고르게 만드는 동시에, 사용한 손과 도구의 움직임을 새로운 제작흔으로 남기기도 합니다.", hint: "붓을 잡고 거친 흙 표면 전체를 문질러보세요.", tool: "붓", mode: "rub" },
+  { title: "분할", verb: "지붕의 유려한 궁륭으로", desc: "둥글게 성형된 점토는 그대로 사용하는 것이 아니라 두 장의 수키와로 나누어야 합니다. 와도(瓦刀)를 이용해 성형체의 양쪽에 길게 분할선을 내어 이후 일정한 방향으로 갈라질 수 있도록 합니다. 이때 점토를 완전히 잘라내기보다 일정한 깊이의 홈을 내어, 형태를 유지하면서 분리할 수 있도록 준비하기도 합니다.", hint: "와도를 잡고 점선을 따라 위에서 아래로 그으세요.", tool: "와도", mode: "rub" },
+  { title: "와통 분리", verb: "뿌리는 흔적을 남긴다.", desc: "점토가 형태를 유지할 만큼 굳으면 성형을 위해 사용했던 와통과 통보를 조심스럽게 빼냅니다. 와통과 천은 기와에서 사라지지만, 와통이 만든 곡면과 통보의 조직은 점토에 그대로 남습니다. 앞에서 살펴본 포목흔과 합철흔도 바로 이 단계에서 도구를 걷어낸 뒤 기와의 안쪽에 모습을 드러냅니다.", hint: "와통 손잡이를 잡고 위쪽으로 여러 번 끌어올리세요.", tool: "와통", mode: "rub" },
+  { title: "와도질", verb: "다른 기와와 만나기 위해", desc: "와통에서 분리한 기와는 끝부분과 안쪽의 불필요하거나 두꺼운 점토를 다시 깎아 형태를 정리합니다. 특히 광단부의 내면을 얇고 평탄하게 다듬은 사례가 많이 확인되는데, 이는 지붕 위에서 앞뒤의 수키와가 서로 자연스럽게 겹쳐지도록 하기 위한 기능적인 조정으로 볼 수 있습니다. 마지막 와도질을 통해 한 장의 기와 형태가 완성됩니다.", hint: "칼을 잡고 기와 안쪽을 골고루 훑으세요.", tool: "손질칼", mode: "rub" },
+  { title: "굽기", verb: "흙에서 기와로", desc: "모든 성형과 마무리가 끝난 기와는 가마에 넣기 전에 충분히 건조합니다. 수분이 많이 남은 상태에서 높은 열을 받으면 갈라지거나 깨질 수 있기 때문입니다. 충분히 마른 기와를 가마에서 높은 온도로 구우면 점토의 성질이 변하며 단단해지고, 오랫동안 지붕을 덮을 수 있는 건축재로 완성됩니다", hint: "부채를 잡고 불씨 위를 빠르게 부쳐보세요.", tool: "부채", mode: "rub" },];
 
-// 영상 파일을 public/videos 폴더에 넣은 뒤 해당 단계의 src를 "/videos/파일명.mp4"로 바꾸면 됩니다.
 const stepVideos: { src: string | null; label: string; filename: string }[] = [
-  { src: null, label: "흙을 살피고 고르는 실제 과정", filename: "step-01-clay.mp4" },
-  { src: null, label: "점토 적층과 쨀줄 절단 과정", filename: "step-02-slab.mp4" },
-  { src: null, label: "원통와통에 통보를 씌우는 과정", filename: "step-03-cloth.mp4" },
-  { src: null, label: "통보 위에 흙판을 붙이는 과정", filename: "step-04-attach.mp4" },
-  { src: null, label: "붓으로 외면을 다듬는 과정", filename: "step-05-brush.mp4" },
-  { src: null, label: "와도로 2분할 홈을 내는 과정", filename: "step-06-cut.mp4" },
-  { src: null, label: "성형체에서 와통을 빼는 과정", filename: "step-07-release.mp4" },
-  { src: null, label: "기와 내면을 칼로 손질하는 과정", filename: "step-08-trim.mp4" },
-  { src: null, label: "가마에서 기와를 굽는 과정", filename: "step-09-fire.mp4" },
+  { src: "/videos/step-01.mp4", label: "흙을 살피고 고르는 실제 과정", filename: "STEP 01 흙 고르기.mp4" },
+  { src: "/videos/step-02.mp4", label: "점토를 준비하고 소지를 만드는 과정", filename: "STEP 02 소지 작업.mp4" },
+  { src: "/videos/step-03.mp4", label: "와통에 통보를 씌우는 과정", filename: "STEP 03 와통에 통보 씌우기.mp4" },
+  { src: "/videos/step-04.mp4", label: "통보 위에 점토판을 붙이는 과정", filename: "STEP 04 와통에 점토판 붙이기.mp4" },
+  { src: "/videos/step-05.mp4", label: "기와 외면을 정리하고 마무리하는 과정", filename: "STEP 05 외면 마무리.mp4" },
+  { src: "/videos/step-06.mp4", label: "와통과 통보를 성형체에서 꺼내는 과정", filename: "STEP 06 와통과 통보 꺼내기.mp4" },
+  { src: "/videos/step-07.mp4", label: "성형체를 2분할하고 건조하는 과정", filename: "STEP 07 2분할 및 건조.mp4" },
+  { src: "/videos/step-08.mp4", label: "와도로 기와를 손질하는 과정", filename: "STEP 08 와도질.mp4" },
+  { src: "/videos/step-09.mp4", label: "가마에서 기와를 소성하는 과정", filename: "STEP 09 소성.mp4" },
 ];
 
 const clayPieces = [
@@ -326,18 +325,20 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
       </div>
       {step === 1 && stacked < 3 ? <div className="vertical-clay-row">{Array.from({length:3-stacked},(_,i)=>{const id=10+stacked+i;return <button key={id} className="stack-lump" style={{left:`${drag===id?pos.x:16}%`,top:`${drag===id?pos.y:35+i*22}%`}} onPointerDown={e=>start(e,id)} aria-label="점토 덩어리 옮기기"/>})}</div> : <button className={`drag-tool tool-${step}`} style={{ left: `${pos.x}%`, top: `${pos.y}%` }} onPointerDown={e => start(e)} aria-label={`${toolName} 드래그`}><i/>{toolName}</button>}
     </>}
-    <div className="game-instruction">{finished ? "완료! 다음 단계로 이동합니다." : step===1&&stacked<3 ? "왼쪽 점토 3개를 직사각형 틀 안에 차곡차곡 놓으세요." : step===1 ? "쨀줄을 좌우로 당겨 흙판 3장을 잘라내세요." : steps[step].hint}</div>
+    <div className="game-instruction">{finished ? "체험 완료! 영상까지 끝까지 보면 다음 단계가 열립니다." : step===1&&stacked<3 ? "왼쪽 점토 3개를 직사각형 틀 안에 차곡차곡 놓으세요." : step===1 ? "쨀줄을 좌우로 당겨 흙판 3장을 잘라내세요." : steps[step].hint}</div>
   </div>;
 }
 
 export default function Home() {
   const [active, setActive] = useState(0);
   const [done, setDone] = useState<number[]>([]);
+  const [craftDone, setCraftDone] = useState<number[]>([]);
+  const [videoDone, setVideoDone] = useState<number[]>([]);
   const [celebrate, setCelebrate] = useState(false);
   const [remoteVideos, setRemoteVideos] = useState<Record<number, string>>({});
   const progress = Math.round(done.length / 9 * 100);
   const unlocked = Math.min(8, done.length);
-  const activeVideo = remoteVideos[active + 1] || stepVideos[active].src;
+  const activeVideo = stepVideos[active].src || remoteVideos[active + 1];
 
   useEffect(() => {
     const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -354,12 +355,19 @@ export default function Home() {
       .catch(error => console.warn("단계별 영상 정보를 불러오지 못했습니다.", error));
   }, []);
 
-  const finish = () => {
-    setDone(d => d.includes(active) ? d : [...d, active]);
-    if (active < 8) window.setTimeout(() => setActive(active + 1), 850);
-    else setCelebrate(true);
-  };
-  const reset = () => { setActive(0); setDone([]); setCelebrate(false); };
+  useEffect(() => {
+    if (done.includes(active) || !craftDone.includes(active) || !videoDone.includes(active)) return;
+    setDone(current => current.includes(active) ? current : [...current, active]);
+    if (active < 8) {
+      const timer = window.setTimeout(() => setActive(current => current === active ? active + 1 : current), 850);
+      return () => window.clearTimeout(timer);
+    }
+    setCelebrate(true);
+  }, [active, craftDone, videoDone]);
+
+  const finish = () => setCraftDone(current => current.includes(active) ? current : [...current, active]);
+  const finishVideo = () => setVideoDone(current => current.includes(active) ? current : [...current, active]);
+  const reset = () => { setActive(0); setDone([]); setCraftDone([]); setVideoDone([]); setCelebrate(false); };
 
   return <main>
     <header className="topbar dark-nav"><a className="brand" href="#top"><span className="brand-mark">瓦</span><span>와공방</span></a><nav><a href="#film">영상</a><a href="#experience">제작 체험</a></nav><a className="mini-cta" href="#experience">체험 시작</a></header>
@@ -373,8 +381,8 @@ export default function Home() {
       <article className="workbench interactive"><div className="step-number"><span>STEP</span>{String(active+1).padStart(2,"0")}</div><div className="step-content"><span className="tag">{steps[active].tool} 체험</span><h3>{steps[active].verb}</h3><p>{steps[active].desc}</p>
         <div className="experience-duo">
           <div className="hands-on-panel"><div className="panel-label"><span>INTERACTIVE</span><b>직접 체험</b></div><CraftGame key={active} step={active} onFinish={finish}/></div>
-          <div className="step-video-panel"><div className="panel-label"><span>DOCUMENTARY</span><b>실제 제작 영상</b></div><div className="step-video-frame">
-            {activeVideo ? <video key={activeVideo} controls playsInline preload="metadata" src={activeVideo}/>
+          <div className="step-video-panel"><div className="panel-label"><span>DOCUMENTARY</span><b>{videoDone.includes(active) ? "✓ 영상 시청 완료" : "끝까지 시청해야 완료"}</b></div><div className={`step-video-frame ${videoDone.includes(active) ? "video-complete" : ""}`}>
+            {activeVideo ? <video key={`${active}-${activeVideo}`} controls playsInline preload="metadata" src={activeVideo} onEnded={finishVideo}/>
             : <div className="step-video-empty"><i>▶</i><strong>{steps[active].title}</strong><p>{stepVideos[active].label}</p><small>영상 파일 자리 · 16:9</small><code>public/videos/{stepVideos[active].filename}</code></div>}
           </div></div>
         </div>
