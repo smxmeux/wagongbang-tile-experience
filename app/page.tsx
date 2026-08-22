@@ -7,10 +7,25 @@ type Step = { title: string; verb: string; desc: string; hint: string; tool: str
 type TileTrace = { id: string; name: string; subtitle: string; description: string; anchor: [number, number, number]; imagePosition: string };
 
 const tileTraces: TileTrace[] = [
-  { id: "cloth", name: "포목흔", subtitle: "기와에 남은 직물의 흔적", description: "기와 안쪽을 가까이 살펴보면 서로 다른 두 방향으로 교차하는 가느다란 선들이 촘촘하게 반복됩니다. 이는 기와를 성형할 때 와통에 씌운 통보(筒布)의 직물조직이 부드러운 점토에 눌려 전사된 포목흔(布目痕)입니다. 통보는 점토가 나무 와통에 직접 달라붙는 것을 막고 성형이 끝난 뒤 기와를 쉽게 분리할 수 있도록 사용되었습니다. 제작이 끝나면서 통보는 사라졌지만, 천의 조직은 기와 내면에 그대로 남았습니다.이 미세한 직물조직을 보다 분명하게 확인하기 위해 3D 스캔으로 취득한 형상에 AO(Ambient Occlusion)를 적용했습니다. AO는 좁은 홈이나 서로 가까이 맞닿은 요철을 상대적으로 어둡게 표현하여, 일반적인 텍스처에서는 흐릿하게 보이는 미세한 선의 윤곽과 연속성을 선명하게 보여주는 가시화 방법입니다. 이를 통해 포목흔을 구성하는 두 방향의 조직을 구분하고, 일정한 영역을 설정하여 실자국의 폭과 간격, 단위면적 안에서 확인되는 조직의 수와 배열을 비교했습니다.여기에서 측정되어 얻을 수 있는 값은 단순히 통보를 구성했던 원단의 모양이 아니라, 점토에 전사되어 현재까지 남은 실자국의 폭과 조직밀도 등의 정보입니다. 조직의 조밀도와 배열, 상대적인 굵기를 통해 제작에 사용된 통보의 특성을 살펴볼 수 있습니다.포목흔은 단순히 기와 표면에 남은 무늬가 아닙니다. 현재는 사라진 통보와 와통 성형과정을 다시 확인할 수 있게 하는 제작의 기록입니다. 웹뷰어에서 원본 3D 데이터와 AO 가시화를 전환하며 두 방향의 직물조직과 그 간격, 밀도의 차이를 직접 살펴보실 수 있습니다.", anchor: [.27, .36, .70], imagePosition: "28% 35%" },
-  { id: "paddle", name: "타날흔", subtitle: "타날판이 남긴 반복 문양", description: "점토를 와통에 밀착시키고 두께를 고르게 만들기 위해 타날판으로 두드린 흔적입니다. 문양이 겹친 방향을 관찰하면 타날의 순서와 도구의 움직임을 추정할 수 있습니다.", anchor: [.48, .55, .77], imagePosition: "52% 52%" },
-  { id: "knife", name: "인장", subtitle: "두 개의 인장이 남긴 것", description: "기와 외면에는 다른 제작흔과 구별되는 두 개의 원형 압흔이 남아 있습니다. 내부에는 글자로 보이는 획이 확인되며, 육안으로도 어느 정도 형태를 살펴볼 수 있습니다. 이번에는 3D 스캔으로 취득한 형상에 곡률맵(Curvature Map)을 적용하여 압흔 안쪽의 미세한 굴곡을 조금 더 분명하게 확인했습니다. 곡률맵은 표면이 휘거나 꺾이는 정도를 명암이나 색의 차이로 강조해, 얕게 눌린 획과 주변 표면을 구분하기 쉽게 보여주는 가시화 방법입니다. 이를 통해 두 압흔의 내부 획을 살펴본 결과 각각 ‘巳’와 ‘刀’로 읽힐 가능성을 확인했습니다.이처럼 문자나 기호가 새겨진 도장을 기와가 아직 마르기 전에 눌러 찍은 것을 일반적으로 인장와(印章瓦) 또는 인각와(印刻瓦)라 부릅니다. 백제의 인장와는 특히 사비기 유적에서 다수 확인되며, 한 글자만 찍은 경우도 있고 둘 이상의 인장을 조합해 사용한 사례도 있습니다. ‘巳’와 ‘刀’ 역시 백제 수키와에서 함께 확인되는 조합으로 알려져 있어, 이 기와의 두 압흔을 해석할 때 비교할 수 있는 중요한 사례가 됩니다.그렇다면 왜 기와에 이런 글자나 기호를 남겼을까요? 인장와는 단순한 장식으로 보기 어렵습니다. 기와가 대량으로 생산되고 여러 제작집단과 생산공정이 운영되는 과정에서 생산·관리와 관련된 표식으로 사용되었을 가능성이 오래전부터 논의되어 왔습니다. 일부 문자는 제작집단이나 행정단위, 생산 시기 등과 연결해 해석되기도 하지만, 모든 인장의 의미가 명확하게 밝혀진 것은 아닙니다. 같은 문자라도 출토 장소와 다른 인장과의 조합에 따라 의미가 달라질 가능성이 있기 때문에 개별 인장의 기능을 하나로 단정하기는 어렵습니다.따라서 이 기와에서 확인되는 ‘巳’와 ‘刀’ 역시 특정 제작자나 관청을 곧바로 가리킨다고 보지는 않습니다. 중요한 것은 기와 제작 과정에서 일정한 표식을 의도적으로 남겼다는 사실이며, 이러한 인장와가 당시 기와 생산이 단순한 개별 작업을 넘어 일정한 관리와 체계 속에서 이루어졌을 가능성을 보여주는 자료라는 점입니다.웹뷰어에서 실제 표면과 곡률맵을 비교해보세요. 육안으로 보이는 두 압흔과 곡률맵에서 강조되는 획을 살펴보며 ‘巳’와 ‘刀’로 추정한 형태를 직접 확인하실 수 있습니다.", anchor: [.72, .43, .64], imagePosition: "72% 42%" },
-  { id: "trim", name: "합철흔", subtitle: "천과 천이 만난 자리", description: "기와 내면의 규칙적인 포목흔을 따라가다 보면 주변의 포목흔과 달리 길게 이어지는 선형 흔적을 발견할 수 있습니다. 그 안에는 작은 종적으로 눌린 압흔도 반복적으로 나타납니다. 이러한 흔적은 와통에 씌운 통보의 양쪽 끝을 서로 꿰매 연결하면서 형성된 합철흔(合綴痕)일 가능성이 있습니다. 통보의 봉제부가 부드러운 점토에 눌리면 직물조직과 다른 형태의 이음매가 기와 안쪽에 남을 수 있습니다.이 흔적의 성격을 확인하기 위해 3D 스캔 데이터를 확대하고 AO와 음영 가시화를 적용했습니다. AO는 깊게 들어간 선과 그 안의 작은 요철을 강조해, 육안으로는 하나의 굵은 선처럼 보이던 영역을 보다 세밀하게 관찰할 수 있게 합니다. 이를 통해 선형 흔적의 진행방향과 폭, 반복되는 작은 압흔의 수와 간격, 흔적 양쪽에서 포목조직이 이어지는 방식을 살펴보았습니다. 일정한 간격으로 압흔이 반복되거나 이음선을 경계로 조직의 흐름이 달라진다면 봉제된 통보가 점토에 전사되었을 가능성을 보다 구체적으로 검토할 수 있습니다.웹뷰어에서 긴 선형 흔적을 따라 이동하며 반복되는 압흔과 주변의 포목조직이 어떻게 이어지는지 직접 비교해보실 수 있습니다.", anchor: [.61, .72, .70], imagePosition: "60% 73%" },
+  { id: "cloth", name: "포목흔", subtitle: "기와에 남은 직물의 흔적", description: `기와의 안쪽을 자세히 살펴보면 가느다란 선들이 서로 가로질러 촘촘히 흔적을 남기고 있는 것을 보실 수 있습니다. 이는 기와를 성형할 때 와통에 씌운 통보(筒布)의 직물조직이 부드러운 점토에 눌려 전사된 포목흔(布目痕)입니다. 통보는 점토가 나무 와통에 직접 달라붙는 것을 막고 성형이 끝난 뒤 기와를 쉽게 분리할 수 있도록 사용되었습니다.
+
+이러한 흔적을 보다 분명하게 확인하기 위해서 3D 스캔으로 취득한 형상에 AO(Ambient Occlusion)맵을 적용했습니다. AO맵은 좁은 홈이나 서로 가까이 맞닿은 요철을 상대적으로 어둡게 표현하여, 일반적인 텍스처에서는 흐릿하게 보이는 미세한 선의 윤곽과 연속성을 선명하게 보여주는 가시화 방법입니다. 이를 통해 점토에 찍혀 남아있는 실자국의 폭이나 굵기와 같은 정보를 취득할 수 있습니다. 웹뷰어에서 원본 3D 데이터와 AO맵 가시화를 전환하며 두 방향의 직물조직과 그 간격, 밀도의 차이를 직접 살펴보실 수 있습니다.`, anchor: [.27, .36, .70], imagePosition: "72% 78%" },
+  { id: "stitch", name: "합철흔", subtitle: "천과 천이 만난 자리", description: `기와 내면의 규칙적인 포목흔을 따라가다 보면 주변의 포목흔과 달리 길게 이어지는 선형 흔적을 발견할 수 있습니다. 이 흔적의 성격을 확인하기 위해 3D 스캔 데이터를 확대하고 AO와 음영 가시화를 적용했습니다. AO는 깊게 들어간 선과 그 안의 작은 요철을 강조해, 육안으로는 하나의 굵은 선처럼 보이던 영역을 보다 세밀하게 관찰할 수 있게 합니다. 그 안에는 작은 종적으로 눌린 압흔도 반복적으로 나타납니다. 이러한 흔적은 와통에 씌운 통보의 양쪽 끝을 서로 꿰매 연결하면서 형성된 합철흔(合綴痕)일 가능성으로 추론하고 있습니다. 웹뷰어에서 긴 선형 흔적을 따라 이동하며 반복되는 압흔과 주변의 포목조직이 어떻게 이어지는지 직접 비교해보실 수 있습니다.`, anchor: [.61, .72, .70], imagePosition: "52% 15%" },
+  { id: "knife", name: "와도질", subtitle: "한 장의 기와를 마무리하다", description: `큰 틀에서의 형태를 만드는 ‘성형’이 끝난 뒤에는 단부와 가장자리의 불필요한 점토를 제거하고 겉면을 매끈하게 조정하는 마무리 작업이 이어지게 됩니다. 이 기와의 경우에도 광단부, 즉 폭이 넓은 하단을 살펴보면 주변과 구별되는 비교적 평탄한 면과 일정한 방향으로 이어지는 선형 흔적을 확인할 수 있습니다. 이는 와도(瓦刀)와 같은 도구로 점토를 깎아 단부를 정리하면서 남은 흔적입니다. 광단부의 깎기흔은 완성된 기와의 형태 뒤에 남아 있는 마지막 조정과 정리의 과정을 보여줍니다. 웹뷰어에서 모델을 직접 돌려보며 원래 표면과 깎여 나간 면의 경계, 절삭선의 방향과 단부의 두께 변화를 살펴보실 수 있습니다.`, anchor: [.38, .09, .58], imagePosition: "10% 55%" },
+  { id: "outer", name: "외면부 흔적", subtitle: "빛을 바꾸자 드러난 흔적", description: `기와의 외면에는 성형과 마무리 과정에서 생긴 여러 흔적이 겹쳐 남아 있습니다. 점토를 두드리며 생긴 타날흔, 표면을 쓸거나 문지른 정면(整面)흔, 물을 이용해 요철을 다듬은 물손질흔, 손으로 누르거나 쓸어 생긴 흔적, 단단한 도구로 긁거나 깎은 조정흔 등이 대표적입니다. 일부에서는 나무결과 비슷한 평행선이나 붓·솔과 같은 섬유성 도구를 사용한 것으로 보이는 가느다란 선형 흔적도 확인됩니다. 이러한 미세 흔적은 3D 스캔 데이터에 RS맵(Radiance Scailing)을 적용해 보다 정확히 관찰할 수 있습니다. RS는 표면의 작은 오목·볼록과 곡률에 따른 명암을 강조하여 형상을 변형하지 않고 육안으로 잘 보이지 않는 선과 요철을 보다 선명하게 보여주는 디지털 가시화 방법입니다. 웹뷰어에서 원본 표면과 RS를 전환하며 평소에는 흐릿했던 선들이 어떻게 드러나는지, 그리고 여러 선이 어떤 방향으로 반복되는지 직접 확인해보실 수 있습니다.`, anchor: [.44, .54, .23], imagePosition: "24% 55%" },
+  { id: "finger", name: "지두흔", subtitle: "디지털 가시화로 읽어낸 장인의 손길", description: `기와 표면에는 도구의 흔적뿐 아니라 제작자가 점토를 직접 만지면서 남긴 흔적도 있습니다. 일부 영역에서는 주변보다 넓고 완만하게 움푹 들어간 형상이 반복적으로 확인됩니다. 이러한 부분을 3D 형상으로 살펴본 결과, 손가락 끝으로 아직 부드러운 점토를 누르거나 밀어 조정하면서 생긴 지두흔(指頭痕)으로 해석할 수 있었습니다. 지두흔은 특정 제작자의 신원을 알려주는 표식은 아니지만 사람의 손이 직접 개입했던 위치와 움직임을 확인하게 해주는 흔적이라고 할 수 있습니다.
+
+눈으로만 볼 때는 표면의 색 차이나 오염이 실제 요철처럼 보일 수 있기 때문에, 이번 분석에서는 3D 데이터에 주변 표면을 기준으로 어느 부분이 얼마나 깊게 들어가거나 돌출되어 있는지를 색이나 명암의 단계로 보여주는 가시화 방법인 심도맵을 적용했습니다. 이를 통해 텍스처에서 얼룩처럼 보이던 부분이 실제로 점토가 눌려 만들어진 함몰인지, 주변보다 어느 정도 깊은지를 보다 쉽게 구분할 수 있습니다. 웹뷰어에서 원본 표면과 심도맵을 비교하며 손가락이 눌린 것으로 보이는 부분의 형태와 깊이를 직접 확인해보실 수 있습니다.`, anchor: [.30, .64, .23], imagePosition: "65% 55%" },
+  { id: "fingerprint", name: "지문", subtitle: "손끝에 남은 가장 작은 흔적", description: `토기나 기와처럼 점토로 만든 유물에는 제작자의 손이 직접 닿으면서 지문이 남기도 합니다. 고고학에서는 토제품 등에서 이러한 지문이 확인되며 제작 과정에서 사람이 유물에 직접 접촉했던 흔적으로 연구되고 있습니다.
+
+토제품에 남은 지문은 오늘날 종이에 찍은 지문처럼 완전한 형태로 남는 경우만 있는 것은 아닙니다. 손가락 일부가 스치거나 눌린 경우에는 몇 줄만 남기도 하며, 이후 표면을 다시 문지르거나 다듬으면 먼저 생긴 지문이 일부 지워질 수도 있습니다.
+
+이 기와에서도 손가락의 융선과 비슷한 미세한 선형 흔적이 일부 관찰됩니다. 이러한 미세한 형상을 살펴보기 위해 3D 데이터를 확대하고 AO맵과 음영맵을 이용할 수 있습니다. AO맵은 좁은 홈을 상대적으로 어둡게 표현해 미세선의 연속성을 쉽게 보이게 하며, 음영맵은 표면이 향한 방향에 따라 빛을 달리 표현하여 작은 홈과 돌출을 구분하는 데 도움을 줍니다. 다만 현재의 형태만으로 이를 지문이라고 확정할 수는 없습니다. 이러한 가시화는 흔적을 지문으로 판정하는 기술이 아니라, 이미 기록된 표면을 보다 자세히 관찰하기 위한 방법입니다.
+
+웹뷰어에서 표면을 확대하고 가시화를 전환하며, 지문에서 나타날 수 있는 미세한 반복선과 이 기와에 남은 선형 흔적을 직접 비교해보실 수 있습니다.`, anchor: [.68, .60, .23], imagePosition: "80% 60%" },
+  { id: "seal", name: "인장", subtitle: "두 개의 인장이 남긴 것", description: `기와 외면에는 다른 제작흔과 구별되는 두 개의 도장으로 찍은 듯한 원형 압흔이 남아 있습니다. 내부에는 글자로 보이는 획이 확인되며, 육안으로도 어느 정도 형태를 살펴볼 수 있습니다. 이처럼 문자나 기호가 새겨진 도장을 기와가 아직 마르기 전에 눌러 찍은 것을 일반적으로 인장와(印章瓦) 또는 인각와(印刻瓦)라 부릅니다. 백제의 인장와는 특히 사비기 유적에서 다수 확인되며, 한 글자만 찍은 경우도 있고 둘 이상의 인장을 조합해 사용한 사례도 있습니다. ‘巳’와 ‘刀’ 역시 백제 수키와에서 함께 확인되는 조합으로 알려져 있어, 이 기와의 두 압흔을 해석할 때 비교할 수 있는 중요한 사례가 됩니다.
+
+표면이 휘거나 꺾이는 정도를 명암이나 색의 차이로 강조해, 얕게 눌린 획과 주변 표면을 구분하기 쉽게 보여주는 가시화 방법인 곡률맵을 사용하여 압흔 안쪽의 미세한 굴곡을 조금 더 분명하게 확인했습니다. 웹뷰어에서 실제 표면과 곡률맵을 비교해보세요. 육안으로 보이는 두 압흔과 곡률맵에서 강조되는 획을 살펴보며 ‘巳’와 ‘刀’로 추정한 형태를 직접 확인하실 수 있습니다.`, anchor: [.54, .18, .23], imagePosition: "66% 7%" },
 ];
 
 
@@ -192,10 +207,67 @@ function ParticleStory() {
 
   return <>
     <section className="black-intro" id="top"><div className="intro-index">瓦 · DIGITAL ARCHIVE</div><h1>기와가<br/>기억하는 손</h1><p>아래로 천천히 스크롤하세요</p><i/></section>
-    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={textureCanvas} className={`texture-canvas ${meshReady?"ready":""}`} style={{clipPath:`inset(0 0 0 ${split}%)`}} aria-hidden="true"/><canvas ref={canvas} className="particle-canvas" aria-label="처음에는 점으로 형성되고 완성 후 왼쪽 점군과 오른쪽 고화질 텍스처로 비교하는 3D 기와"/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>TEXTURE</b></div><button className={`mesh-handle ${meshReady?"ready":""}`} style={{left:`${split}%`}} type="button" role="slider" aria-label="점군과 텍스처 비교 막대" aria-valuemin={8} aria-valuemax={92} aria-valuenow={Math.round(split)} onPointerDown={startComparisonHandle} onPointerUp={()=>{splitDragging.current=false}} onPointerCancel={()=>{splitDragging.current=false}} onKeyDown={event=>{if(event.key==="ArrowLeft"||event.key==="ArrowDown"){event.preventDefault();setComparisonSplit(split-2)}else if(event.key==="ArrowRight"||event.key==="ArrowUp"){event.preventDefault();setComparisonSplit(split+2)}else if(event.key==="Home"){event.preventDefault();setComparisonSplit(8)}else if(event.key==="End"){event.preventDefault();setComparisonSplit(92)}}}>↔</button>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className={`trace-marker ${meshReady?"ready":""}`} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 상세 보기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 질감으로<br/>형상을 비교합니다</h2><p>{meshReady?"표면의 번호를 눌러 제작 흔적을 자세히 살펴보세요":"점들이 모두 모이면 막대를 움직여 점군과 실제 표면 질감을 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
-    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture-4k-v2.webp" alt={`${activeTrace.name} 고화질 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>고화질 사진에서 표면의 미세한 요철과 도구 흔적을 관찰해 보세요.</small></div></article></div>}
+    <section className="particle-story" ref={section}><div className="particle-sticky"><canvas ref={textureCanvas} className={`texture-canvas ${meshReady?"ready":""}`} style={{clipPath:`inset(0 0 0 ${split}%)`}} aria-hidden="true"/><canvas ref={canvas} className="particle-canvas" aria-label="점군과 메쉬를 비교하며 회전할 수 있는 3D 기와"/><div className={`mesh-split ${meshReady?"ready":""}`} style={{left:`${split}%`}}><i/><span>POINT</span><b>MESH</b></div><button className={`mesh-handle ${meshReady?"ready":""}`} style={{left:`${split}%`}} type="button" role="slider" aria-label="포인트와 메쉬 비교 막대" aria-valuemin={8} aria-valuemax={92} aria-valuenow={Math.round(split)} onPointerDown={startComparisonHandle} onPointerUp={()=>{splitDragging.current=false}} onPointerCancel={()=>{splitDragging.current=false}} onKeyDown={event=>{if(event.key==="ArrowLeft"||event.key==="ArrowDown"){event.preventDefault();setComparisonSplit(split-2)}else if(event.key==="ArrowRight"||event.key==="ArrowUp"){event.preventDefault();setComparisonSplit(split+2)}else if(event.key==="Home"){event.preventDefault();setComparisonSplit(8)}else if(event.key==="End"){event.preventDefault();setComparisonSplit(92)}}}>↔</button><div className="particle-copy"><span>01 · 형상의 기록</span><h2>점에서 메쉬로<br/>형상을 비교합니다</h2><p>{meshReady?"막대를 좌우로 움직이고 기와를 회전해 두 기록 방식을 비교하세요":"점들이 모두 모이면 포인트와 메쉬를 나누어 비교할 수 있습니다"}</p></div><div className="scroll-meter"><i/></div></div></section>
+    <TraceViewer />
     <section className="film-section" id="film"><div className="film-heading"><span>02 · 영상 기록</span><h2>흙에서 지붕까지</h2><p>제작 과정 영상이 준비되면 이 공간에 연결됩니다.</p></div><div className="film-frame"><div className="film-placeholder"><button aria-label="영상 재생 자리">▶</button><b>FILM PLACEHOLDER</b><span>16 : 9 · VIDEO</span></div></div></section>
   </>;
+}
+
+function TraceViewer() {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const markerRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [activeTrace, setActiveTrace] = useState<TileTrace | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(1);
+
+  useEffect(()=>{ zoomRef.current=zoom; },[zoom]);
+  useEffect(()=>{
+    if(!activeTrace) return;
+    const close=(event:KeyboardEvent)=>{if(event.key==="Escape")setActiveTrace(null)};
+    addEventListener("keydown",close); return()=>removeEventListener("keydown",close);
+  },[activeTrace]);
+
+  useEffect(()=>{
+    const target=canvas.current;if(!target)return;
+    let alive=true,frame=0,yaw=-.18,pitch=.08,yawVelocity=0,dragging=false,lastX=0,lastY=0;
+    let points:number[][]=[],faces:number[][]=[],landmarks:number[][]=[],center=[0,0,0];
+    let gl:WebGLRenderingContext|null=null,program:WebGLProgram|null=null,indexCount=0,image:HTMLImageElement|null=null;
+    let uniforms:{center:WebGLUniformLocation|null;modelMin:WebGLUniformLocation|null;modelRange:WebGLUniformLocation|null;viewport:WebGLUniformLocation|null;scale:WebGLUniformLocation|null;yaw:WebGLUniformLocation|null;pitch:WebGLUniformLocation|null}|null=null;
+    let modelMin=[0,0,0],modelRange=[1,1,1];
+    const compile=(context:WebGLRenderingContext,type:number,source:string)=>{const shader=context.createShader(type)!;context.shaderSource(shader,source);context.compileShader(shader);if(!context.getShaderParameter(shader,context.COMPILE_STATUS))throw new Error(context.getShaderInfoLog(shader)||"shader error");return shader};
+    const load=async()=>{
+      const [obj,binary,blob]=await Promise.all([fetch("/tile-model/tile.obj").then(r=>r.text()),fetch("/tile-model/tile-webgl-v2.bin").then(r=>r.arrayBuffer()),fetch("/tile-model/tile-texture-4k-v2.webp").then(r=>r.blob())]);
+      if(!alive)return;
+      const lines=obj.split("\n");points=lines.filter(line=>line.startsWith("v ")).map(line=>line.trim().split(/\s+/).slice(1,4).map(Number));faces=lines.filter(line=>line.startsWith("f ")).map(line=>line.trim().split(/\s+/).slice(1).map(value=>Number(value)-1));
+      const mins=[0,1,2].map(axis=>Math.min(...points.map(point=>point[axis]))),maxs=[0,1,2].map(axis=>Math.max(...points.map(point=>point[axis])));center=mins.map((value,axis)=>(value+maxs[axis])/2);
+      landmarks=tileTraces.map(trace=>{const desired=trace.anchor.map((ratio,axis)=>mins[axis]+(maxs[axis]-mins[axis])*ratio);let nearest=faces[0],distance=Infinity;for(const face of faces){const centroid=[0,1,2].map(axis=>face.reduce((sum,index)=>sum+points[index][axis],0)/face.length),next=centroid.reduce((sum,value,axis)=>sum+(value-desired[axis])**2,0);if(next<distance){distance=next;nearest=face}}return nearest});
+      const url=URL.createObjectURL(blob);image=new Image();image.src=url;await image.decode();URL.revokeObjectURL(url);
+      gl=target.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});if(!gl)return;
+      const vertex=compile(gl,gl.VERTEX_SHADER,`attribute vec3 aPosition;attribute vec2 aUv;uniform vec3 uCenter;uniform vec3 uModelMin;uniform vec3 uModelRange;uniform vec2 uViewport;uniform float uScale;uniform float uYaw;uniform float uPitch;varying vec2 vUv;void main(){vec3 p=(uModelMin+aPosition*uModelRange)-uCenter;float cy=cos(uYaw),sy=sin(uYaw);float xr=p.x*cy+p.z*sy;float zr=-p.x*sy+p.z*cy;float cp=cos(uPitch),sp=sin(uPitch);float yr=p.y*cp-zr*sp;float depth=p.y*sp+zr*cp;gl_Position=vec4(2.0*yr*uScale/uViewport.x,2.0*(-xr+depth*.1)*uScale/uViewport.y,-depth/420.0,1.0);vUv=aUv;}`);
+      const fragment=compile(gl,gl.FRAGMENT_SHADER,`precision mediump float;uniform sampler2D uTexture;varying vec2 vUv;void main(){vec3 color=texture2D(uTexture,vUv).rgb;color=(color-.5)*1.1+.55;gl_FragColor=vec4(color,1.0);}`);
+      program=gl.createProgram()!;gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);gl.useProgram(program);
+      const view=new DataView(binary),vertexCount=view.getUint32(0,true),count=view.getUint32(4,true),positionOffset=32,uvOffset=positionOffset+vertexCount*6,indexOffset=(uvOffset+vertexCount*4+3)&~3;indexCount=count;
+      modelMin=[view.getFloat32(8,true),view.getFloat32(12,true),view.getFloat32(16,true)];modelRange=[view.getFloat32(20,true),view.getFloat32(24,true),view.getFloat32(28,true)];if(!gl.getExtension("OES_element_index_uint"))return;
+      const positions=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,positions);gl.bufferData(gl.ARRAY_BUFFER,new Uint16Array(binary,positionOffset,vertexCount*3),gl.STATIC_DRAW);const positionLocation=gl.getAttribLocation(program,"aPosition");gl.enableVertexAttribArray(positionLocation);gl.vertexAttribPointer(positionLocation,3,gl.UNSIGNED_SHORT,true,0,0);
+      const uvs=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,uvs);gl.bufferData(gl.ARRAY_BUFFER,new Uint16Array(binary,uvOffset,vertexCount*2),gl.STATIC_DRAW);const uvLocation=gl.getAttribLocation(program,"aUv");gl.enableVertexAttribArray(uvLocation);gl.vertexAttribPointer(uvLocation,2,gl.UNSIGNED_SHORT,true,0,0);
+      const indices=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint32Array(binary,indexOffset,count),gl.STATIC_DRAW);
+      const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,image);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.generateMipmap(gl.TEXTURE_2D);
+      uniforms={center:gl.getUniformLocation(program,"uCenter"),modelMin:gl.getUniformLocation(program,"uModelMin"),modelRange:gl.getUniformLocation(program,"uModelRange"),viewport:gl.getUniformLocation(program,"uViewport"),scale:gl.getUniformLocation(program,"uScale"),yaw:gl.getUniformLocation(program,"uYaw"),pitch:gl.getUniformLocation(program,"uPitch")};gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);
+    };
+    load().catch(error=>console.error("Trace viewer initialization failed",error));
+    const down=(event:globalThis.PointerEvent)=>{dragging=true;lastX=event.clientX;lastY=event.clientY;yawVelocity=0;target.setPointerCapture(event.pointerId)};
+    const move=(event:globalThis.PointerEvent)=>{if(!dragging)return;const dx=event.clientX-lastX,dy=event.clientY-lastY;yaw+=dx*.012;pitch=Math.max(-.7,Math.min(.7,pitch+dy*.008));yawVelocity=dx*.0015;lastX=event.clientX;lastY=event.clientY};
+    const up=()=>{dragging=false};
+    const draw=()=>{if(!alive){return}const w=target.clientWidth,h=target.clientHeight,dpr=Math.min(devicePixelRatio,innerWidth<760?1.25:1.5);if(target.width!==w*dpr||target.height!==h*dpr){target.width=w*dpr;target.height=h*dpr;gl?.viewport(0,0,target.width,target.height)}if(!dragging){yaw+=.0013+yawVelocity;yawVelocity*=.95}const scale=Math.min(w/360,h/500)*1.45*zoomRef.current;if(gl&&program&&uniforms){gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.uniform3f(uniforms.center,center[0],center[1],center[2]);gl.uniform3f(uniforms.modelMin,modelMin[0],modelMin[1],modelMin[2]);gl.uniform3f(uniforms.modelRange,modelRange[0],modelRange[1],modelRange[2]);gl.uniform2f(uniforms.viewport,w,h);gl.uniform1f(uniforms.scale,scale);gl.uniform1f(uniforms.yaw,yaw);gl.uniform1f(uniforms.pitch,pitch);gl.drawElements(gl.TRIANGLES,indexCount,gl.UNSIGNED_INT,0)}
+      for(let i=0;i<landmarks.length;i++){const marker=markerRefs.current[i],face=landmarks[i];if(!marker||!face)continue;const projected=face.map(index=>{const point=points[index],x=point[0]-center[0],y=point[1]-center[1],z=point[2]-center[2],xr=x*Math.cos(yaw)+z*Math.sin(yaw),zr=-x*Math.sin(yaw)+z*Math.cos(yaw),yr=y*Math.cos(pitch)-zr*Math.sin(pitch),depth=y*Math.sin(pitch)+zr*Math.cos(pitch);return{x:w/2+yr*scale,y:h/2+(xr-depth*.1)*scale,depth}});const px=projected.reduce((sum,p)=>sum+p.x,0)/projected.length,py=projected.reduce((sum,p)=>sum+p.y,0)/projected.length,visible=px>28&&px<w-28&&py>28&&py<h-28;marker.style.transform=`translate3d(${px}px,${py}px,0)`;marker.style.opacity=visible?"1":"0";marker.style.pointerEvents=visible?"auto":"none"}
+      frame=requestAnimationFrame(draw)};
+    target.addEventListener("pointerdown",down);target.addEventListener("pointermove",move);target.addEventListener("pointerup",up);target.addEventListener("pointercancel",up);draw();return()=>{alive=false;cancelAnimationFrame(frame);if(image)image.src="";target.removeEventListener("pointerdown",down);target.removeEventListener("pointermove",move);target.removeEventListener("pointerup",up);target.removeEventListener("pointercancel",up)};
+  },[]);
+
+  const changeZoom=(next:number)=>setZoom(Math.max(.72,Math.min(1.65,next)));
+  return <section className="trace-viewer-section" id="traces"><div className="trace-viewer-heading"><span>02 · 제작 흔적 탐색</span><h2>표면에 남은<br/>일곱 개의 기록</h2><p>기와를 손가락으로 돌리고, 표시된 포인트를 눌러 장인의 손과 도구가 남긴 흔적을 살펴보세요.</p></div><div className="trace-stage"><canvas ref={canvas} aria-label="회전과 확대가 가능한 세로형 3D 기와 흔적 탐색기"/>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className="trace-marker trace-viewer-marker ready" onPointerDown={event=>event.stopPropagation()} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 설명 열기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="trace-controls"><button onClick={()=>changeZoom(zoom-.12)} aria-label="기와 축소">−</button><button onClick={()=>changeZoom(1)} aria-label="확대 초기화">{Math.round(zoom*100)}%</button><button onClick={()=>changeZoom(zoom+.12)} aria-label="기와 확대">＋</button></div><p className="trace-gesture">드래그하여 회전 · 버튼으로 확대</p></div>
+    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture-4k-v2.webp" alt={`${activeTrace.name} 고화질 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>기와를 회전해 포인트의 실제 위치와 표면 흔적을 함께 관찰해 보세요.</small></div></article></div>}
+  </section>;
 }
 
 const steps: Step[] = [
@@ -334,7 +406,6 @@ export default function Home() {
   const [done, setDone] = useState<number[]>([]);
   const [craftDone, setCraftDone] = useState<number[]>([]);
   const [videoDone, setVideoDone] = useState<number[]>([]);
-  const [celebrate, setCelebrate] = useState(false);
   const [remoteVideos, setRemoteVideos] = useState<Record<number, string>>({});
   const progress = Math.round(done.length / 9 * 100);
   const unlocked = Math.min(8, done.length);
@@ -362,12 +433,11 @@ export default function Home() {
       const timer = window.setTimeout(() => setActive(current => current === active ? active + 1 : current), 850);
       return () => window.clearTimeout(timer);
     }
-    setCelebrate(true);
   }, [active, craftDone, videoDone]);
 
   const finish = () => setCraftDone(current => current.includes(active) ? current : [...current, active]);
   const finishVideo = () => setVideoDone(current => current.includes(active) ? current : [...current, active]);
-  const reset = () => { setActive(0); setDone([]); setCraftDone([]); setVideoDone([]); setCelebrate(false); };
+  const reset = () => { setActive(0); setDone([]); setCraftDone([]); setVideoDone([]); };
 
   return <main>
     <header className="topbar dark-nav"><a className="brand" href="#top"><span className="brand-mark">瓦</span><span>와공방</span></a><nav><a href="#film">영상</a><a href="#experience">제작 체험</a></nav><a className="mini-cta" href="#experience">체험 시작</a></header>
@@ -382,7 +452,7 @@ export default function Home() {
         <div className="experience-duo">
           <div className="hands-on-panel"><div className="panel-label"><span>INTERACTIVE</span><b>직접 체험</b></div><CraftGame key={active} step={active} onFinish={finish}/></div>
           <div className="step-video-panel"><div className="panel-label"><span>DOCUMENTARY</span><b>{videoDone.includes(active) ? "✓ 영상 시청 완료" : "끝까지 시청해야 완료"}</b></div><div className={`step-video-frame ${videoDone.includes(active) ? "video-complete" : ""}`}>
-            {activeVideo ? <video key={`${active}-${activeVideo}`} controls playsInline preload="metadata" src={activeVideo} onEnded={finishVideo}/>
+            {activeVideo ? <video key={`${active}-${activeVideo}`} controls autoPlay muted playsInline preload="auto" src={activeVideo} onEnded={finishVideo}/>
             : <div className="step-video-empty"><i>▶</i><strong>{steps[active].title}</strong><p>{stepVideos[active].label}</p><small>영상 파일 자리 · 16:9</small><code>public/videos/{stepVideos[active].filename}</code></div>}
           </div></div>
         </div>
@@ -390,6 +460,5 @@ export default function Home() {
     </section>
 
     <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.</p><button onClick={reset}>체험 처음부터 ↺</button></footer>
-    {celebrate&&<div className="celebrate" role="dialog" aria-modal="true"><div><span>瓦</span><p>아홉 번의 손길을 모두 마쳤습니다</p><h2>나만의 기와 완성!</h2><button onClick={reset}>다시 만들어보기</button><button className="close" onClick={()=>setCelebrate(false)}>닫기</button></div></div>}
   </main>;
 }
