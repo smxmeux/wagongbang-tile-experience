@@ -28,6 +28,14 @@ const tileTraces: TileTrace[] = [
 표면이 휘거나 꺾이는 정도를 명암이나 색의 차이로 강조해, 얕게 눌린 획과 주변 표면을 구분하기 쉽게 보여주는 가시화 방법인 곡률맵을 사용하여 압흔 안쪽의 미세한 굴곡을 조금 더 분명하게 확인했습니다. 웹뷰어에서 실제 표면과 곡률맵을 비교해보세요. 육안으로 보이는 두 압흔과 곡률맵에서 강조되는 획을 살펴보며 ‘巳’와 ‘刀’로 추정한 형태를 직접 확인하실 수 있습니다.`, anchor: [.54, .18, .23], imagePosition: "66% 7%" },
 ];
 
+const traceAnchors: Record<string, [number, number, number]> = {
+  cloth: [.50, .50, .70],
+  stitch: [.80, .50, .70],
+};
+const traceNumbers: Record<string, number> = { cloth: 1, stitch: 2, knife: 3, seal: 4, outer: 5, finger: 6, fingerprint: 7 };
+tileTraces.forEach(trace=>{ if(traceAnchors[trace.id]) trace.anchor=traceAnchors[trace.id]; });
+tileTraces.sort((a,b)=>traceNumbers[a.id]-traceNumbers[b.id]);
+
 
 function ParticleStory() {
   const section = useRef<HTMLElement>(null);
@@ -84,7 +92,7 @@ function ParticleStory() {
       center = [0,1,2].map(axis => { const values=points.map(p=>p[axis]); return (Math.min(...values)+Math.max(...values))/2; });
       const mins=[0,1,2].map(axis=>Math.min(...points.map(p=>p[axis]))), maxs=[0,1,2].map(axis=>Math.max(...points.map(p=>p[axis])));
       landmarkFaces=tileTraces.map(trace=>{
-        const target=trace.anchor.map((ratio,axis)=>mins[axis]+(maxs[axis]-mins[axis])*ratio);
+        const target=(traceAnchors[trace.id]??trace.anchor).map((ratio,axis)=>mins[axis]+(maxs[axis]-mins[axis])*ratio);
         let nearest=faces[0], nearestDistance=Infinity;
         for(const face of faces){
           const centroid=[0,1,2].map(axis=>face.reduce((sum,index)=>sum+points[index][axis],0)/face.length);
