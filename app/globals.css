@@ -111,4 +111,5 @@ h1,h2,h3,p,b,strong,span,small,button,a{word-break:keep-all;overflow-wrap:normal
 
 .trace-surface-label{position:absolute;z-index:7;left:18px;top:18px;display:flex;flex-direction:column;gap:5px;max-width:320px;padding:11px 13px;border-left:2px solid #eee;background:rgba(5,5,5,.8);pointer-events:none;transition:border-color .25s}.trace-surface-label span{font-size:9px;letter-spacing:.2em;color:#f0f0eb}.trace-surface-label b{font-size:9px;font-weight:400;color:#777;line-height:1.45}.trace-surface-label[data-surface="outer"]{border-color:#a86648}.trace-surface-label[data-surface="side"]{border-color:#555}.trace-surface-label[data-surface="side"] span{color:#888}
 @media(max-width:760px){.trace-surface-label{left:12px;top:70px;max-width:230px;padding:9px 10px}.trace-surface-label b{font-size:8px}}
+.trace-stage .trace-viewer-marker{transition:background .2s,color .2s;will-change:transform,opacity;transform-origin:center;backface-visibility:hidden}
 /* Render deployment synchronization marker. */
