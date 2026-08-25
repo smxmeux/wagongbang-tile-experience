@@ -500,11 +500,18 @@ function BgmPlayer() {
     audioRef.current?.play().catch(() => undefined);
   };
 
+  const togglePlayback = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) audio.play().catch(() => undefined);
+    else audio.pause();
+  };
+
   return <div className="bgm-control" data-playing={playing}>
     <audio ref={audioRef} src="/the-mountain.mp3" autoPlay loop preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
     <span><i /> BGM</span>
-    <button type="button" onClick={() => setMuted(current => !current)} aria-label={muted || volume === 0 ? "배경음악 소리 켜기" : "배경음악 음소거"}>
-      {muted || volume === 0 ? "×" : "♪"}
+    <button type="button" onClick={togglePlayback} aria-label={playing ? "배경음악 일시정지" : "배경음악 재생"}>
+      {playing ? "Ⅱ" : "▶"}
     </button>
     <input type="range" min="0" max="1" step="0.01" value={muted ? 0 : volume} onChange={event => changeVolume(Number(event.target.value))} aria-label="배경음악 볼륨" />
   </div>;
