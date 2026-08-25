@@ -33,6 +33,15 @@ const traceAnchors: Record<string, [number, number, number]> = {
   stitch: [.70, .50, .70],
 };
 const traceNumbers: Record<string, number> = { cloth: 1, stitch: 2, knife: 3, seal: 4, outer: 5, finger: 6, fingerprint: 7 };
+const traceImages: Record<string, { src: string; label: string; position: string }> = {
+  cloth: { src: "/trace-images/cloth.webp", label: "AO MAP · 포목흔", position: "50% 48%" },
+  stitch: { src: "/trace-images/stitch.webp", label: "AO DETAIL · 합철흔", position: "50% 50%" },
+  knife: { src: "/trace-images/knife.webp", label: "SURFACE DETAIL · 와도질", position: "50% 60%" },
+  seal: { src: "/trace-images/seal.webp", label: "CURVATURE MAP · 인장", position: "50% 42%" },
+  outer: { src: "/trace-images/outer.webp", label: "RS MAP · 외면부 흔적", position: "50% 50%" },
+  finger: { src: "/trace-images/finger.webp", label: "DEPTH MAP · 지두흔", position: "58% 50%" },
+  fingerprint: { src: "/trace-images/fingerprint.webp", label: "MACRO DETAIL · 지문", position: "50% 48%" },
+};
 tileTraces.forEach(trace=>{ if(traceAnchors[trace.id]) trace.anchor=traceAnchors[trace.id]; });
 tileTraces.sort((a,b)=>traceNumbers[a.id]-traceNumbers[b.id]);
 const traceTexturePoints: Record<string, [number, number]> = {
@@ -287,7 +296,7 @@ function TraceViewer() {
 
   const changeZoom=(next:number)=>setZoom(Math.max(.72,Math.min(1.65,next)));
   return <section className="trace-viewer-section" id="traces"><div className="trace-viewer-heading"><span>02 · 제작 흔적 탐색</span><h2>표면에 남은<br/>일곱 개의 기록</h2><p>기와를 손가락으로 돌리고, 표시된 포인트를 눌러 장인의 손과 도구가 남긴 흔적을 살펴보세요. 내면과 외면의 포인트는 해당 면을 보고 있을 때만 나타납니다.</p></div><div className="trace-stage"><canvas ref={canvas} aria-label="좌우로 회전하고 확대할 수 있는 세로형 3D 기와 흔적 탐색기"/>{tileTraces.map((trace,index)=><button key={trace.id} ref={element=>{markerRefs.current[index]=element}} className="trace-marker trace-viewer-marker ready" onPointerDown={event=>event.stopPropagation()} onClick={()=>setActiveTrace(trace)} aria-label={`${trace.name} 설명 열기`}><i/><span>{String(index+1).padStart(2,"0")}</span><b>{trace.name}</b></button>)}<div className="trace-surface-label" ref={surfaceLabelRef} data-surface="inner"><span>INNER · 내면</span><b>포목흔 · 합철흔</b></div><div className="trace-controls"><button onClick={()=>changeZoom(zoom-.12)} aria-label="기와 축소">−</button><button onClick={()=>changeZoom(1)} aria-label="확대 초기화">{Math.round(zoom*100)}%</button><button onClick={()=>changeZoom(zoom+.12)} aria-label="기와 확대">＋</button></div><p className="trace-gesture">좌우로 드래그하여 회전 · 버튼으로 확대</p></div>
-    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src="/tile-model/tile-texture-4k-v2.webp" alt={`${activeTrace.name} 고화질 사진`} style={{objectPosition:activeTrace.imagePosition}}/><span>HIGH RESOLUTION DETAIL</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>기와를 회전해 포인트의 실제 위치와 표면 흔적을 함께 관찰해 보세요.</small></div></article></div>}
+    {activeTrace&&<div className="trace-modal" role="dialog" aria-modal="true" aria-labelledby="trace-title" onClick={()=>setActiveTrace(null)}><article onClick={event=>event.stopPropagation()}><button className="trace-close" onClick={()=>setActiveTrace(null)} aria-label="상세 창 닫기">×</button><div className="trace-photo"><img src={traceImages[activeTrace.id].src} alt={`${activeTrace.name} 분석 사진`} style={{objectPosition:traceImages[activeTrace.id].position}}/><span>{traceImages[activeTrace.id].label}</span></div><div className="trace-content"><span>PRODUCTION TRACE · {String(tileTraces.indexOf(activeTrace)+1).padStart(2,"0")}</span><h2 id="trace-title">{activeTrace.name}</h2><h3>{activeTrace.subtitle}</h3><p>{activeTrace.description}</p><small>기와를 회전해 포인트의 실제 위치와 표면 흔적을 함께 관찰해 보세요.</small></div></article></div>}
   </section>;
 }
 
