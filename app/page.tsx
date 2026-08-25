@@ -92,7 +92,7 @@ function ParticleStory() {
   },[]);
 
   useEffect(() => {
-    let points: number[][] = [], faces: number[][] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0];
+    let points: number[][] = [], faces: number[][] = [], landmarkFaces: number[][] = [], frame = 0, progress = 0, lastDraw = 0, center = [0,0,0], gatheringStart = 0, gatheringStarted = false;
     let alive = true, comparisonEnabled = false, yaw = 0, pitch = 0, yawVelocity = 0, pitchVelocity = 0, dragging = false, lastX = 0, lastY = 0;
     let gl: WebGLRenderingContext | null = null, glProgram: WebGLProgram | null = null, glIndexCount = 0, textureImage: HTMLImageElement | null = null;
     let glUniforms: { center: WebGLUniformLocation | null; modelMin: WebGLUniformLocation | null; modelRange: WebGLUniformLocation | null; viewport: WebGLUniformLocation | null; scale: WebGLUniformLocation | null; yaw: WebGLUniformLocation | null; pitch: WebGLUniformLocation | null } | null = null;
@@ -140,11 +140,20 @@ function ParticleStory() {
       glUniforms={center:gl.getUniformLocation(glProgram,"uCenter"),modelMin:gl.getUniformLocation(glProgram,"uModelMin"),modelRange:gl.getUniformLocation(glProgram,"uModelRange"),viewport:gl.getUniformLocation(glProgram,"uViewport"),scale:gl.getUniformLocation(glProgram,"uScale"),yaw:gl.getUniformLocation(glProgram,"uYaw"),pitch:gl.getUniformLocation(glProgram,"uPitch")};gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(0,0,0,0);
     };
     loadTextureModel().catch(error=>console.error("Tile WebGL initialization failed",error));
-    const onScroll = () => {
-      if (!section.current) return;
+    const startGathering = () => {
+      if (gatheringStarted) return;
+      gatheringStarted = true;
+      gatheringStart = performance.now();
+    };
+    const onWheel = (event: globalThis.WheelEvent) => {
+      if (event.deltaY <= 0 || !section.current) return;
       const r = section.current.getBoundingClientRect();
-      progress = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - innerHeight)));
-      comparisonEnabled = progress >= .78; setMeshReady(comparisonEnabled);
+      if (r.top <= innerHeight * 1.02 && r.bottom > 0) startGathering();
+    };
+    const onScroll = () => {
+      if (!section.current || gatheringStarted) return;
+      const r = section.current.getBoundingClientRect();
+      if (r.top < innerHeight * .82 && r.bottom > 0) startGathering();
     };
     const onPointerDown = (event: globalThis.PointerEvent) => {
       if (progress < .55 || !canvas.current) return;
@@ -163,6 +172,7 @@ function ParticleStory() {
       if (!alive || !canvas.current) return;
       if (time - lastDraw < 32) { frame=requestAnimationFrame(draw); return; }
       lastDraw = time;
+      if(gatheringStarted && progress<1){progress=Math.min(1,(time-gatheringStart)/1500);if(progress>=.78&&!comparisonEnabled){comparisonEnabled=true;setMeshReady(true)}}
       const c = canvas.current, ctx = c.getContext("2d")!;
       const dpr = Math.min(devicePixelRatio, innerWidth < 760 ? 1.15 : 1.5), w = c.clientWidth, h = c.clientHeight;
       if (c.width !== w*dpr || c.height !== h*dpr) { c.width=w*dpr; c.height=h*dpr; }
@@ -211,11 +221,11 @@ function ParticleStory() {
       frame=requestAnimationFrame(draw);
     };
     const target = canvas.current;
-    addEventListener("scroll",onScroll,{passive:true}); addEventListener("resize",onScroll);
+    addEventListener("wheel",onWheel,{passive:true}); addEventListener("scroll",onScroll,{passive:true}); addEventListener("resize",onScroll);
     target?.addEventListener("pointerdown",onPointerDown); target?.addEventListener("pointermove",onPointerMove);
     target?.addEventListener("pointerup",onPointerUp); target?.addEventListener("pointercancel",onPointerUp);
     onScroll(); draw();
-    return()=>{alive=false;if(textureImage)textureImage.src="";cancelAnimationFrame(frame);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
+    return()=>{alive=false;if(textureImage)textureImage.src="";cancelAnimationFrame(frame);removeEventListener("wheel",onWheel);removeEventListener("scroll",onScroll);removeEventListener("resize",onScroll);target?.removeEventListener("pointerdown",onPointerDown);target?.removeEventListener("pointermove",onPointerMove);target?.removeEventListener("pointerup",onPointerUp);target?.removeEventListener("pointercancel",onPointerUp)};
   },[]);
 
   const setComparisonSplit = (value: number) => {
@@ -455,6 +465,51 @@ function CraftGame({ step, onFinish }: { step: number; onFinish: () => void }) {
   </div>;
 }
 
+function BgmPlayer() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [volume, setVolume] = useState(.28);
+  const [muted, setMuted] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = volume;
+    audio.muted = muted;
+
+    const begin = () => audio.play().catch(() => undefined);
+    begin();
+    const unlock = () => begin();
+    addEventListener("pointerdown", unlock, { once: true });
+    addEventListener("keydown", unlock, { once: true });
+    return () => {
+      removeEventListener("pointerdown", unlock);
+      removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.volume = volume;
+    audioRef.current.muted = muted;
+  }, [volume, muted]);
+
+  const changeVolume = (next: number) => {
+    setVolume(next);
+    setMuted(next === 0);
+    audioRef.current?.play().catch(() => undefined);
+  };
+
+  return <div className="bgm-control" data-playing={playing}>
+    <audio ref={audioRef} src="/the-mountain.mp3" autoPlay loop preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+    <span><i /> BGM</span>
+    <button type="button" onClick={() => setMuted(current => !current)} aria-label={muted || volume === 0 ? "배경음악 소리 켜기" : "배경음악 음소거"}>
+      {muted || volume === 0 ? "×" : "♪"}
+    </button>
+    <input type="range" min="0" max="1" step="0.01" value={muted ? 0 : volume} onChange={event => changeVolume(Number(event.target.value))} aria-label="배경음악 볼륨" />
+  </div>;
+}
+
 export default function Home() {
   const [active, setActive] = useState(0);
   const [done, setDone] = useState<number[]>([]);
@@ -493,6 +548,7 @@ export default function Home() {
   const reset = () => { setActive(0); setDone([]); setCraftDone([]); setVideoDone([]); };
 
   return <main>
+    <BgmPlayer />
     <header className="topbar dark-nav"><a className="brand" href="#top"><span className="brand-mark">瓦</span><span>와공방</span></a><nav><a href="#film">영상</a><a href="#experience">제작 체험</a></nav><a className="mini-cta" href="#experience">체험 시작</a></header>
     <ParticleStory />
 
@@ -512,6 +568,6 @@ export default function Home() {
         <aside><b>장인의 한마디</b><p>{steps[active].hint}</p></aside><div className="actions">{active>0&&<button className="back" onClick={()=>setActive(active-1)}>← 이전 단계</button>}{done.includes(active)&&active<8&&<button className="complete" onClick={()=>setActive(active+1)}>다음 단계 →</button>}</div></div></article>
     </section>
 
-    <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.</p><button onClick={reset}>체험 처음부터 ↺</button></footer>
+    <footer><div className="brand"><span className="brand-mark">瓦</span><span>와공방</span></div><p>흙에서 지붕까지, 우리 건축의 시간을 잇습니다.<small className="font-credit">제목 서체 · 국가유산진흥원 ‘경복궁 수문장 제목체 L’</small></p><button onClick={reset}>체험 처음부터 ↺</button></footer>
   </main>;
 }
