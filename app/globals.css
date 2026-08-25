@@ -139,6 +139,7 @@ h1,h2,h3,p,b,strong,span,small,button,a{word-break:keep-all;overflow-wrap:normal
 /* On phones, vertical swipes must keep scrolling the page. Horizontal drags still rotate the tile or move the comparison handle. */
 .particle-sticky,.particle-sticky canvas,.mesh-split,.mesh-handle{touch-action:pan-y}
 .particle-sticky{overscroll-behavior-y:auto}
+.particle-copy{display:none}
 
 /* 국가유산진흥원 · 경복궁 수문장 제목체 L (공공누리 제1유형) */
 @font-face{font-family:"Sumunjang Title";src:url("/gyeongbokgung-sumunjang-title-l.ttf") format("truetype");font-weight:300;font-style:normal;font-display:swap}
