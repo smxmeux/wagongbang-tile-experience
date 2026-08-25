@@ -142,8 +142,8 @@ h1,h2,h3,p,b,strong,span,small,button,a{word-break:keep-all;overflow-wrap:normal
 .particle-copy{display:block;max-width:min(680px,78vw)}
 .particle-copy span,.particle-copy p{display:none}
 .particle-copy h2{font-size:0;margin:0;max-width:680px;word-break:keep-all}
-.particle-copy h2::after{content:"수많은 점들이 모여 하나의 기와를 기억하다";display:block;font-size:clamp(34px,5vw,72px);line-height:1.12;color:#f3f3ef}
-@media(max-width:760px){.particle-copy{max-width:calc(100vw - 48px)}.particle-copy h2::after{font-size:36px;line-height:1.18}}
+.particle-copy h2::after{content:"수많은 점들이 모여 하나의 기와를 기억하다";display:block;font-size:clamp(26px,3.4vw,50px);line-height:1.2;color:#f3f3ef}
+@media(max-width:760px){.particle-copy{max-width:calc(100vw - 48px)}.particle-copy h2::after{font-size:27px;line-height:1.25}}
 
 /* 국가유산진흥원 · 경복궁 수문장 제목체 L (공공누리 제1유형) */
 @font-face{font-family:"Sumunjang Title";src:url("/gyeongbokgung-sumunjang-title-l.ttf") format("truetype");font-weight:300;font-style:normal;font-display:swap}
